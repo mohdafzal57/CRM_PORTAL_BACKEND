@@ -54,15 +54,19 @@ const userSchema = new mongoose.Schema(
 
 // Hash password before saving
 userSchema.pre('save', async function (next) {
-    if (!this.isModified('password')) return next();
+    if (!this.isModified('password')) return;
+    const rounds = parseInt(process.env.BCRYPT_ROUNDS) || 12;
+    this.password = await bcrypt.hash(this.password, rounds);
 
-    try {
-        const rounds = parseInt(process.env.BCRYPT_ROUNDS) || 12;
-        this.password = await bcrypt.hash(this.password, rounds);
-        next();
-    } catch (error) {
-        next(error);
-    }
+    // if (!this.isModified('password')) return next();
+
+    // try {
+    //     const rounds = parseInt(process.env.BCRYPT_ROUNDS) || 12;
+    //     this.password = await bcrypt.hash(this.password, rounds);
+    //     next();
+    // } catch (error) {
+    //     next(error);
+    // }
 });
 
 // Instance method to compare passwords
