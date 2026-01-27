@@ -18,7 +18,7 @@ const registerValidator = [
         ),
     body('role')
         .optional()
-        .isIn(['Admin', 'Manager', 'Sales'])
+        .isIn(['Internship', 'HR', 'Developer'])
         .withMessage('Invalid role'),
 ];
 
