@@ -8,6 +8,8 @@ const AppError = require('./utils/AppError');
 
 const app = express();
 
+app.set('trust proxy', true);
+
 // Security HTTP headers
 app.use(helmet());
 
