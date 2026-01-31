@@ -1,0 +1,156 @@
+/* Import Tailwind CSS v4 */
+@import "tailwindcss";
+
+/* ===== CUSTOM THEME CONFIGURATION ===== */
+@theme {
+  /* Primary Colors - Light Blue Theme */
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
+
+  /* Custom Fonts */
+  --font-sans: 'Inter', system-ui, sans-serif;
+
+  /* Custom Shadows */
+  --shadow-soft: 0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.05), 0 12px 24px rgba(0, 0, 0, 0.05);
+
+  /* Custom Animations */
+  --animate-fade-in: fade-in 0.5s ease-out;
+  --animate-slide-up: slide-up 0.5s ease-out;
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slide-up {
+    from { 
+      transform: translateY(20px); 
+      opacity: 0; 
+    }
+    to { 
+      transform: translateY(0); 
+      opacity: 1; 
+    }
+  }
+}
+
+/* ===== BASE STYLES ===== */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-gray-50 text-gray-900 font-sans antialiased;
+  min-height: 100vh;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400;
+}
+
+/* ===== UTILITY CLASSES ===== */
+.gradient-bg {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 50%, #bfdbfe 100%);
+}
+
+.text-gradient {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-primary-800;
+}
+
+/* ===== COMPONENT CLASSES ===== */
+.btn-primary {
+  @apply bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold
+         hover:bg-primary-700 focus:outline-none focus:ring-4 focus:ring-primary-300
+         transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed
+         shadow-lg cursor-pointer;
+  box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.3);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 6px 20px 0 rgba(37, 99, 235, 0.4);
+}
+
+.btn-secondary {
+  @apply bg-white text-gray-700 px-6 py-3 rounded-lg font-semibold
+         border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-4 
+         focus:ring-gray-200 transition-all duration-200 cursor-pointer;
+}
+
+.input-field {
+  @apply w-full px-4 py-3 bg-white border border-gray-300 rounded-lg
+         text-gray-900 placeholder-gray-400
+         focus:outline-none focus:ring-4 focus:ring-primary-100 focus:border-primary-500
+         transition-all duration-200;
+}
+
+.input-error {
+  @apply border-red-500 focus:ring-red-100 focus:border-red-500;
+}
+
+.card {
+  @apply bg-white rounded-2xl p-8;
+  box-shadow: var(--shadow-card);
+}
+
+.label {
+  @apply block text-sm font-medium text-gray-700 mb-2;
+}
+
+.error-text {
+  @apply text-red-500 text-sm mt-1;
+}
+
+.success-text {
+  @apply text-green-600 text-sm mt-1;
+}
+
+/* ===== LOADING SPINNER ===== */
+.spinner {
+  border: 3px solid #f3f4f6;
+  border-top: 3px solid #3b82f6;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ===== ANIMATION CLASSES ===== */
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.5s ease-out;
+}
