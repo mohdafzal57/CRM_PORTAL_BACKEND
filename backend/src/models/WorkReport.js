@@ -25,12 +25,10 @@ const WorkReportSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User', // References existing User model
     required: true,
-    index: true
   },
   date: {
     type: Date,
     required: true,
-    index: true
   },
   tasks: [TaskSchema],
   summary: {

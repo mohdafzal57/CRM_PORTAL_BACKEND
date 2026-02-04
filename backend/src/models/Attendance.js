@@ -9,12 +9,10 @@ const AttendanceSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User', // References existing User model
     required: true,
-    index: true
   },
   date: {
     type: Date,
     required: true,
-    index: true
   },
   checkIn: {
     time: Date,
@@ -55,6 +53,8 @@ const AttendanceSchema = new mongoose.Schema({
 
 // Compound index for unique daily attendance
 AttendanceSchema.index({ user: 1, date: 1 }, { unique: true });
+
+AttendanceSchema.index({ status: 1 });
 
 // Virtual for formatted work hours
 AttendanceSchema.virtual('formattedWorkHours').get(function() {
