@@ -70,6 +70,7 @@ const registerAdmin = async (req, res) => {
         // Check for validation errors
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
+            console.error('❌ Registration Validation Failed:', errors.array());
             return res.status(400).json({
                 success: false,
                 message: 'Validation failed',
@@ -104,8 +105,8 @@ const registerAdmin = async (req, res) => {
         }
 
         // Check if company name already exists
-        const existingCompany = await Company.findOne({ 
-            companyName: { $regex: new RegExp(`^${companyName}$`, 'i') } 
+        const existingCompany = await Company.findOne({
+            companyName: { $regex: new RegExp(`^${companyName}$`, 'i') }
         });
         if (existingCompany) {
             return res.status(400).json({

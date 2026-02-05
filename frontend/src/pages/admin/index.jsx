@@ -19,7 +19,7 @@ const Button = ({ children, onClick, variant = 'primary', disabled, loading, cla
     danger: 'bg-red-500 hover:bg-red-600 text-white',
     success: 'bg-green-500 hover:bg-green-600 text-white'
   };
-  
+
   return (
     <button
       onClick={onClick}
@@ -44,7 +44,7 @@ const Input = ({ label, ...props }) => (
 const Select = ({ label, options, ...props }) => (
   <div className="mb-4">
     {label && <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>}
-    <select 
+    <select
       className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
       {...props}
     >
@@ -81,7 +81,7 @@ const Loading = () => (
 
 const Modal = ({ isOpen, onClose, title, children }) => {
   if (!isOpen) return null;
-  
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
@@ -154,7 +154,7 @@ export function Dashboard() {
             <div className="text-4xl">👥</div>
           </div>
         </Card>
-        
+
         <Card>
           <div className="flex items-center justify-between">
             <div>
@@ -164,7 +164,7 @@ export function Dashboard() {
             <div className="text-4xl">✅</div>
           </div>
         </Card>
-        
+
         <Card>
           <div className="flex items-center justify-between">
             <div>
@@ -174,7 +174,7 @@ export function Dashboard() {
             <div className="text-4xl">🚫</div>
           </div>
         </Card>
-        
+
         <Card>
           <div className="flex items-center justify-between">
             <div>
@@ -283,7 +283,7 @@ export function UserManagement() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [formData, setFormData] = useState({
-    name: '', email: '', password: '', role: 'EMPLOYEE', phone: '', department: '', designation: ''
+    fullName: '', email: '', password: '', role: 'EMPLOYEE', mobile: '', department: '', designation: ''
   });
   const [formLoading, setFormLoading] = useState(false);
 
@@ -317,7 +317,10 @@ export function UserManagement() {
       resetForm();
       fetchUsers(pagination.current);
     } catch (err) {
-      alert(err.response?.data?.message || 'Error saving user');
+      const errorMsg = err.response?.data?.errors
+        ? err.response.data.errors.join(', ')
+        : (err.response?.data?.message || 'Error saving user');
+      alert(errorMsg);
     } finally {
       setFormLoading(false);
     }
@@ -335,13 +338,28 @@ export function UserManagement() {
     }
   };
 
+  const handleDeleteUser = async (user) => {
+    if (!window.confirm(`⚠️ WARNING: Are you sure you want to PERMANENTLY DELETE ${user.name || user.fullName}? This action cannot be undone.`)) {
+      return;
+    }
+    try {
+      setLoading(true);
+      await api.deleteUser(user._id);
+      fetchUsers(pagination.current);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error deleting user');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const openEditModal = (user) => {
     setEditingUser(user);
     setFormData({
-      name: user.name || user.fullName || '',
+      fullName: user.fullName || user.name || '',
       email: user.email,
       role: user.role,
-      phone: user.phone || '',
+      mobile: user.mobile || '',
       department: user.department || '',
       designation: user.designation || ''
     });
@@ -351,7 +369,7 @@ export function UserManagement() {
   const resetForm = () => {
     setEditingUser(null);
     setFormData({
-      name: '', email: '', password: '', role: 'EMPLOYEE', phone: '', department: '', designation: ''
+      fullName: '', email: '', password: '', role: 'EMPLOYEE', mobile: '', department: '', designation: ''
     });
   };
 
@@ -466,6 +484,13 @@ export function UserManagement() {
                           >
                             {user.isActive ? '🚫' : '✅'}
                           </button>
+                          <button
+                            onClick={() => handleDeleteUser(user)}
+                            className="p-2 hover:bg-red-100 rounded-lg text-red-600"
+                            title="Delete"
+                          >
+                            🗑️
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -509,8 +534,8 @@ export function UserManagement() {
         <form onSubmit={handleSubmit}>
           <Input
             label="Full Name *"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            value={formData.fullName}
+            onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
             required
           />
           <Input
@@ -543,9 +568,9 @@ export function UserManagement() {
           />
           <div className="grid grid-cols-2 gap-4">
             <Input
-              label="Phone"
-              value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              label="Mobile Number"
+              value={formData.mobile}
+              onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
             />
             <Input
               label="Department"
@@ -671,7 +696,7 @@ export function AttendanceReports() {
                     <td className="py-3 px-4">
                       <Badge variant={
                         record.status === 'PRESENT' ? 'success' :
-                        record.status === 'ABSENT' ? 'danger' : 'warning'
+                          record.status === 'ABSENT' ? 'danger' : 'warning'
                       }>
                         {record.status}
                       </Badge>
@@ -840,7 +865,7 @@ export function WorkReports() {
                     <td className="py-3 px-4">
                       <Badge variant={
                         report.status === 'APPROVED' ? 'success' :
-                        report.status === 'REJECTED' ? 'danger' : 'warning'
+                          report.status === 'REJECTED' ? 'danger' : 'warning'
                       }>
                         {report.status}
                       </Badge>
@@ -885,7 +910,7 @@ export function ExportCenter() {
       <div className="grid lg:grid-cols-2 gap-6">
         <Card>
           <h2 className="text-lg font-semibold mb-6">📤 Export Configuration</h2>
-          
+
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-3">Data Type</label>
             <div className="grid grid-cols-3 gap-3">
@@ -897,11 +922,10 @@ export function ExportCenter() {
                 <button
                   key={item.value}
                   onClick={() => setExportType(item.value)}
-                  className={`p-4 rounded-xl border-2 transition-all ${
-                    exportType === item.value
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-blue-300'
-                  }`}
+                  className={`p-4 rounded-xl border-2 transition-all ${exportType === item.value
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'border-gray-200 hover:border-blue-300'
+                    }`}
                 >
                   <div className="text-2xl mb-2">{item.icon}</div>
                   <span className="text-sm font-medium">{item.label}</span>

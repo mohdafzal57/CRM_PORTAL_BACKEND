@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api'
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 });
 
 // Add token to requests
@@ -35,6 +35,7 @@ export const getUsers = (params) => API.get('/admin/users', { params });
 export const createUser = (data) => API.post('/admin/users', data);
 export const updateUser = (id, data) => API.put(`/admin/users/${id}`, data);
 export const toggleUserStatus = (id) => API.patch(`/admin/users/${id}/toggle-status`);
+export const deleteUser = (id) => API.delete(`/admin/users/${id}`);
 
 // Attendance
 export const getAttendance = (params) => API.get('/admin/attendance', { params });

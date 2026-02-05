@@ -41,8 +41,8 @@ api.interceptors.response.use(
     if (status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      if (!window.location.pathname.includes('/login') && 
-          !window.location.pathname.includes('/register')) {
+      if (!window.location.pathname.includes('/login') &&
+        !window.location.pathname.includes('/register')) {
         window.location.href = '/login';
       }
     }
@@ -54,9 +54,7 @@ api.interceptors.response.use(
 // ==================== AUTH API CALLS ====================
 
 export const registerAdmin = async (formData) => {
-  const response = await api.post('/auth/register', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  const response = await api.post('/auth/register', formData);
   return response.data;
 };
 

@@ -28,22 +28,24 @@ exports.getDashboardStats = async (req, res) => {
       pendingReports,
       recentUsers
     ] = await Promise.all([
-      User.countDocuments({ role: { $in: ['EMPLOYEE', 'HR', 'MANAGER'] } }),
-      User.countDocuments({ role: 'INTERN' }),
-      User.countDocuments({ isActive: true, role: { $ne: 'ADMIN' } }),
-      User.countDocuments({ isActive: false, role: { $ne: 'ADMIN' } }),
+      User.countDocuments({ role: { $in: ['EMPLOYEE', 'HR', 'MANAGER'] }, companyId: req.user.companyId._id || req.user.companyId }),
+      User.countDocuments({ role: 'INTERN', companyId: req.user.companyId._id || req.user.companyId }),
+      User.countDocuments({ isActive: true, role: { $ne: 'ADMIN' }, companyId: req.user.companyId._id || req.user.companyId }),
+      User.countDocuments({ isActive: false, role: { $ne: 'ADMIN' }, companyId: req.user.companyId._id || req.user.companyId }),
       Attendance.aggregate([
         { $match: { date: { $gte: today, $lt: tomorrow } } },
-        { $group: { 
-          _id: '$status', 
-          count: { $sum: 1 } 
-        }}
+        {
+          $group: {
+            _id: '$status',
+            count: { $sum: 1 }
+          }
+        }
       ]),
       WorkReport.countDocuments({ status: 'SUBMITTED' }),
-      User.find({ role: { $ne: 'ADMIN' } })
+      User.find({ role: { $ne: 'ADMIN' }, companyId: req.user.companyId._id || req.user.companyId })
         .sort({ createdAt: -1 })
         .limit(5)
-        .select('name email role createdAt isActive')
+        .select('fullName email role createdAt isActive')
     ]);
 
     // Format attendance summary
@@ -74,7 +76,7 @@ exports.getDashboardStats = async (req, res) => {
     });
   } catch (error) {
     console.error('Dashboard stats error:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch dashboard stats' });
+    next(error);
   }
 };
 
@@ -83,24 +85,27 @@ exports.getDashboardStats = async (req, res) => {
 // GET /api/admin/users - List all users with filters
 exports.getUsers = async (req, res) => {
   try {
-    const { 
-      page = 1, 
-      limit = 10, 
-      role, 
-      status, 
+    const {
+      page = 1,
+      limit = 10,
+      role,
+      status,
       search,
       sortBy = 'createdAt',
       sortOrder = 'desc'
     } = req.query;
 
-    const query = { role: { $ne: 'ADMIN' } }; // Exclude admins
+    const query = {
+      role: { $ne: 'ADMIN' },
+      companyId: req.user.companyId // Filter by admin's company
+    };
 
     if (role) query.role = role;
     if (status === 'active') query.isActive = true;
     if (status === 'disabled') query.isActive = false;
     if (search) {
       query.$or = [
-        { name: { $regex: search, $options: 'i' } },
+        { fullName: { $regex: search, $options: 'i' } },
         { email: { $regex: search, $options: 'i' } },
         { employeeId: { $regex: search, $options: 'i' } }
       ];
@@ -129,14 +134,14 @@ exports.getUsers = async (req, res) => {
     });
   } catch (error) {
     console.error('Get users error:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch users' });
+    next(error);
   }
 };
 
 // POST /api/admin/users - Create new user (Admin-created only)
-exports.createUser = async (req, res) => {
+exports.createUser = async (req, res, next) => {
   try {
-    const { name, email, password, role, phone, department, designation } = req.body;
+    const { fullName, email, password, role, mobile, department, designation } = req.body;
 
     // Check existing user
     const existingUser = await User.findOne({ email });
@@ -149,11 +154,12 @@ exports.createUser = async (req, res) => {
     const employeeId = `EMP${String(count + 1).padStart(5, '0')}`;
 
     const user = new User({
-      name,
+      fullName,
       email,
       password, // Will be hashed by existing User model pre-save hook
       role: role || 'EMPLOYEE',
-      phone,
+      companyId: req.user.companyId._id || req.user.companyId, // Assign admin's company
+      mobile,
       department,
       designation,
       employeeId,
@@ -170,16 +176,16 @@ exports.createUser = async (req, res) => {
     });
   } catch (error) {
     console.error('Create user error:', error);
-    res.status(500).json({ success: false, message: 'Failed to create user' });
+    next(error);
   }
 };
 
 // PUT /api/admin/users/:id - Update user
-exports.updateUser = async (req, res) => {
+exports.updateUser = async (req, res, next) => {
   try {
     const { id } = req.params;
     const updates = req.body;
-    
+
     // Prevent role escalation to ADMIN
     if (updates.role === 'ADMIN') {
       return res.status(403).json({ success: false, message: 'Cannot assign ADMIN role' });
@@ -189,8 +195,8 @@ exports.updateUser = async (req, res) => {
     delete updates.password;
     delete updates._id;
 
-    const user = await User.findByIdAndUpdate(
-      id,
+    const user = await User.findOneAndUpdate(
+      { _id: id, companyId: req.user.companyId._id || req.user.companyId },
       { ...updates, updatedBy: req.user._id },
       { new: true, runValidators: true }
     ).select('-password');
@@ -202,7 +208,7 @@ exports.updateUser = async (req, res) => {
     res.json({ success: true, message: 'User updated successfully', data: user });
   } catch (error) {
     console.error('Update user error:', error);
-    res.status(500).json({ success: false, message: 'Failed to update user' });
+    next(error);
   }
 };
 
@@ -210,7 +216,7 @@ exports.updateUser = async (req, res) => {
 exports.toggleUserStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     const user = await User.findById(id);
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
@@ -227,6 +233,34 @@ exports.toggleUserStatus = async (req, res) => {
   } catch (error) {
     console.error('Toggle status error:', error);
     res.status(500).json({ success: false, message: 'Failed to toggle user status' });
+  }
+};
+
+// DELETE /api/admin/users/:id - Permanent delete
+exports.deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Ensure the user being deleted belongs to the same company
+    const user = await User.findOne({ _id: id, companyId: req.user.companyId });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found or access denied' });
+    }
+
+    if (user.role === 'ADMIN') {
+      return res.status(403).json({ success: false, message: 'Cannot delete admin account' });
+    }
+
+    await User.findByIdAndDelete(id);
+
+    res.json({
+      success: true,
+      message: 'User deleted successfully'
+    });
+  } catch (error) {
+    console.error('Delete user error:', error);
+    res.status(500).json({ success: false, message: 'Failed to delete user' });
   }
 };
 
@@ -252,7 +286,7 @@ exports.getAttendance = async (req, res) => {
     if (outOfOffice === 'true') {
       query['checkIn.isWithinOffice'] = false;
     }
-    
+
     if (startDate || endDate) {
       query.date = {};
       if (startDate) query.date.$gte = new Date(startDate);
@@ -287,7 +321,7 @@ exports.getAttendance = async (req, res) => {
 exports.getAttendanceSummary = async (req, res) => {
   try {
     const { month, year, userId } = req.query;
-    
+
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0);
 
@@ -376,10 +410,12 @@ exports.getGeoLogs = async (req, res) => {
 
     if (outOfOfficeOnly === 'true') {
       query.$and = [
-        { $or: [
-          { 'checkIn.isWithinOffice': false },
-          { 'checkOut.isWithinOffice': false }
-        ]}
+        {
+          $or: [
+            { 'checkIn.isWithinOffice': false },
+            { 'checkOut.isWithinOffice': false }
+          ]
+        }
       ];
     }
 
@@ -609,7 +645,7 @@ exports.getSettings = async (req, res) => {
 exports.updateSettings = async (req, res) => {
   try {
     const updates = req.body;
-    
+
     const company = await Company.findOneAndUpdate(
       {},
       { ...updates, updatedBy: req.user._id },

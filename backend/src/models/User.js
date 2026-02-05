@@ -49,6 +49,13 @@ const userSchema = new mongoose.Schema({
         ]
     },
 
+    // Employee ID for organization tracking
+    employeeId: {
+        type: String,
+        unique: true,
+        sparse: true // Allow null for existing users not yet assigned
+    },
+
     // Password - will be hashed before saving
     password: {
         type: String,
@@ -117,7 +124,7 @@ const userSchema = new mongoose.Schema({
 });
 
 // Pre-save middleware to hash password
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
     // Only hash if password is modified
     if (!this.isModified('password')) {
         return next();
@@ -134,12 +141,12 @@ userSchema.pre('save', async function(next) {
 });
 
 // Method to compare entered password with hashed password
-userSchema.methods.comparePassword = async function(enteredPassword) {
+userSchema.methods.comparePassword = async function (enteredPassword) {
     return await bcrypt.compare(enteredPassword, this.password);
 };
 
 // Method to generate JWT token
-userSchema.methods.generateAuthToken = function() {
+userSchema.methods.generateAuthToken = function () {
     return jwt.sign(
         {
             id: this._id,
@@ -153,13 +160,13 @@ userSchema.methods.generateAuthToken = function() {
 };
 
 // Static method to check if email exists
-userSchema.statics.emailExists = async function(email) {
+userSchema.statics.emailExists = async function (email) {
     const user = await this.findOne({ email: email.toLowerCase() });
     return !!user;
 };
 
 // Virtual for checking if user is admin
-userSchema.virtual('isAdmin').get(function() {
+userSchema.virtual('isAdmin').get(function () {
     return this.role === ROLES.ADMIN;
 });
 
