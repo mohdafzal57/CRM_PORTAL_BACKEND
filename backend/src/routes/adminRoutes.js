@@ -36,6 +36,12 @@ router.put('/reports/:id/review', adminController.reviewWorkReport);
 // ==================== EXPORT ====================
 router.post('/export', adminController.exportData);
 
+// ==================== INTERN MANAGEMENT ====================
+router.get('/diagnose/:userId', adminController.diagnoseIntern);
+router.get('/interns/:userId', adminController.getInternDetails);
+router.put('/interns/:userId', adminController.updateInternByAdmin);
+router.post('/interns/:userId/assign-task', adminController.assignTaskToIntern);
+
 // ==================== SETTINGS ====================
 router.get('/settings', adminController.getSettings);
 router.put('/settings', adminController.updateSettings);

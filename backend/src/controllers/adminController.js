@@ -6,6 +6,7 @@ const User = require('../models/User'); // Existing model
 const Company = require('../models/Company'); // Existing model
 const Attendance = require('../models/Attendance'); // New model
 const WorkReport = require('../models/WorkReport'); // New model
+const Intern = require('../models/Intern'); // Intern detail model
 const { generateExcel, generatePDF } = require('../utils/exportUtils');
 
 // ==================== DASHBOARD ====================
@@ -149,9 +150,26 @@ exports.createUser = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Email already exists' });
     }
 
-    // Generate employee ID
-    const count = await User.countDocuments();
-    const employeeId = `EMP${String(count + 1).padStart(5, '0')}`;
+    // Generate appropriate ID based on role
+    let trackingId;
+    const isIntern = role === 'INTERN';
+
+    if (isIntern) {
+      // Find the last intern ID to ensure uniqueness even after deletions
+      const lastIntern = await Intern.findOne().sort({ internId: -1 });
+      let nextId = 1;
+      if (lastIntern && lastIntern.internId) {
+        const lastIdNum = parseInt(lastIntern.internId.replace('INTN', ''), 10);
+        if (!isNaN(lastIdNum)) {
+          nextId = lastIdNum + 1;
+        }
+      }
+      trackingId = `INTN${String(nextId).padStart(5, '0')}`;
+    } else {
+      // Logic for employees (optional: can be improved similarly if needed, but keeping simple for now)
+      const empCount = await User.countDocuments({ role: { $ne: 'INTERN' } });
+      trackingId = `EMP${String(empCount + 1).padStart(5, '0')}`;
+    }
 
     const user = new User({
       fullName,
@@ -162,17 +180,26 @@ exports.createUser = async (req, res, next) => {
       mobile,
       department,
       designation,
-      employeeId,
+      employeeId: !isIntern ? trackingId : undefined,
       isActive: true,
       createdBy: req.user._id // From existing auth middleware
     });
 
     await user.save();
 
+    // If it's an intern, create the Intern detail record
+    if (isIntern) {
+      await Intern.create({
+        userId: user._id,
+        internId: trackingId,
+        // Other fields will be filled during profile update by the intern
+      });
+    }
+
     res.status(201).json({
       success: true,
-      message: 'User created successfully',
-      data: { ...user.toObject(), password: undefined }
+      message: `${isIntern ? 'Intern' : 'User'} created successfully`,
+      data: { ...user.toObject(), password: undefined, internId: isIntern ? trackingId : undefined }
     });
   } catch (error) {
     console.error('Create user error:', error);
@@ -252,11 +279,16 @@ exports.deleteUser = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Cannot delete admin account' });
     }
 
+    // If user is an INTERN, delete their intern profile as well
+    if (user.role === 'INTERN') {
+      await Intern.findOneAndDelete({ userId: id });
+    }
+
     await User.findByIdAndDelete(id);
 
     res.json({
       success: true,
-      message: 'User deleted successfully'
+      message: 'User and associated data deleted successfully'
     });
   } catch (error) {
     console.error('Delete user error:', error);
@@ -615,6 +647,190 @@ exports.exportData = async (req, res) => {
   } catch (error) {
     console.error('Export error:', error);
     res.status(500).json({ success: false, message: 'Export failed' });
+  }
+};
+
+// ==================== INTERN MANAGEMENT (FOR ADMIN) ====================
+
+// GET /api/admin/interns/:userId - Get full intern details
+exports.getInternDetails = async (req, res, next) => {
+  try {
+    let { userId } = req.params;
+
+    // AGGRESSIVE LOG TO DEBUG 400
+    console.log('\n\n--- INCOMING GET INTERN DETAILS ---');
+    console.log('Raw Params:', JSON.stringify(req.params));
+    console.log('Raw userId:', userId);
+    console.log('Raw Headers:', JSON.stringify(req.headers));
+
+    // Sanitize userId (remove any accidental appends like :1 from console logs)
+    if (userId && userId.includes(':')) {
+      console.log('Sanitizing userId (found colon):', userId);
+      userId = userId.split(':')[0];
+    }
+    userId = userId ? userId.trim() : '';
+
+    console.log(`🔍 Admin fetching details for UserID (Sanitized): '${userId}'`);
+
+    const companyId = req.user.companyId._id || req.user.companyId;
+
+    // Check strictness
+    console.log(`Checking against Company ID: ${companyId}`);
+
+    // Verify user role and company
+    try {
+      const user = await User.findOne({ _id: userId, companyId });
+
+      if (!user) {
+        console.log('❌ Intern user not found or doesn\'t belong to this company');
+        return res.status(404).json({ success: false, message: 'Intern not found' });
+      }
+
+      if (user.role?.toUpperCase() !== 'INTERN') {
+        console.log(`❌ User is not an intern. Role: ${user.role}`);
+        return res.status(400).json({ success: false, message: 'Selected user is not an intern' });
+      }
+
+      const intern = await Intern.findOne({ userId })
+        .populate('userId', 'fullName email mobile department designation profilePicture isActive');
+
+      if (!intern) {
+        console.log('❌ Intern details record missing (Intern profile not initialized)');
+        return res.status(404).json({ success: false, message: 'Intern profile details not initialized' });
+      }
+
+      console.log('✅ Intern details found:', intern.userId?.fullName);
+      console.log('Weekly Reports Count:', intern.academicWork?.weeklyProgressReport?.length);
+      res.json({ success: true, data: intern });
+    } catch (dbError) {
+      console.error('Database Query Error:', dbError);
+      // If CastError, this will be caught by global handler, but let's log specifically here.
+      if (dbError.name === 'CastError') {
+        console.error('Specific DB Error: CastError - Invalid ID Format for User.findOne');
+      }
+      throw dbError;
+    }
+  } catch (error) {
+    console.error('❌ Error in getInternDetails:', error);
+    next(error);
+  }
+};
+
+// DIAGNOSTIC ENDPOINT
+exports.diagnoseIntern = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const result = {
+      step: 'Start Diagnosis',
+      userIdReceived: userId,
+      adminUser: {
+        id: req.user._id,
+        companyId: req.user.companyId
+      }
+    };
+
+    const user = await User.findById(userId);
+    result.userFound = !!user;
+    if (user) {
+      result.userData = {
+        id: user._id,
+        role: user.role,
+        companyId: user.companyId,
+        isActive: user.isActive
+      };
+    }
+
+    const intern = await Intern.findOne({ userId });
+    result.internRecordFound = !!intern;
+    if (intern) {
+      result.internData = {
+        internId: intern.internId,
+        domain: intern.internship?.domain
+      };
+    }
+
+    res.json({ success: true, diagnosis: result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// PUT /api/admin/interns/:userId - Update intern internship & project details
+exports.updateInternByAdmin = async (req, res, next) => {
+  try {
+    let { userId } = req.params;
+
+    // AGGRESSIVE LOG FOR UPDATE
+    console.log('\n\n--- INCOMING INTERN UPDATE ---');
+    console.log('Raw Params:', JSON.stringify(req.params));
+    console.log('Raw UserId:', userId);
+    console.log('Update Payload:', JSON.stringify(req.body));
+
+    // Sanitize userId
+    if (userId && userId.includes(':')) {
+      userId = userId.split(':')[0];
+    }
+    userId = userId.trim();
+
+    const { internship, projectWork } = req.body;
+
+    console.log(`Updating Intern UserID (Sanitized): '${userId}'`);
+
+    // Admin is only allowed to update internship settings and project status
+    // Personal & Education are intern-filled
+
+    const intern = await Intern.findOneAndUpdate(
+      { userId },
+      { $set: { internship, projectWork } },
+      { new: true, runValidators: true }
+    );
+
+    if (!intern) {
+      return res.status(404).json({ success: false, message: 'Intern not found' });
+    }
+
+    res.json({ success: true, message: 'Intern details updated successfully', data: intern });
+  } catch (error) {
+    console.error('Update intern by admin error:', error);
+    next(error);
+  }
+};
+
+// ASSIGN TASK TO INTERN
+exports.assignTaskToIntern = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { title, description, dueDate } = req.body;
+
+    if (!title) {
+      return res.status(400).json({ success: false, message: 'Task title is required' });
+    }
+
+    const intern = await Intern.findOne({ userId });
+
+    if (!intern) {
+      return res.status(404).json({ success: false, message: 'Intern profile not found' });
+    }
+
+    const newTask = {
+      title,
+      description,
+      dueDate,
+      status: 'Pending',
+      assignedDate: new Date()
+    };
+
+    intern.assignedTasks.push(newTask);
+    await intern.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'Task assigned successfully',
+      data: intern.assignedTasks[intern.assignedTasks.length - 1]
+    });
+  } catch (error) {
+    console.error('Assign Task Error:', error);
+    res.status(500).json({ success: false, message: 'Failed to assign task' });
   }
 };
 

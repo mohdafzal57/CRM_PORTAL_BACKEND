@@ -13,6 +13,12 @@ import {
   WorkReports as ReportsPage
 } from './pages/admin';
 
+// Intern Pages
+import InternDashboard from './pages/intern/Dashboard';
+import InternProfile from './pages/intern/Profile';
+import InternTasks from './pages/intern/Tasks';
+import InternReports from './pages/intern/Reports';
+
 // ============ PLACEHOLDER/UTILITY COMPONENTS ============
 
 // Placeholder for non-admin users
@@ -91,7 +97,12 @@ function App() {
         <Route path="/hr/dashboard" element={<ProtectedRoute allowedRoles={['HR']}><PlaceholderDashboard /></ProtectedRoute>} />
         <Route path="/manager/dashboard" element={<ProtectedRoute allowedRoles={['MANAGER']}><PlaceholderDashboard /></ProtectedRoute>} />
         <Route path="/employee/dashboard" element={<ProtectedRoute allowedRoles={['EMPLOYEE']}><PlaceholderDashboard /></ProtectedRoute>} />
-        <Route path="/intern/dashboard" element={<ProtectedRoute allowedRoles={['INTERN']}><PlaceholderDashboard /></ProtectedRoute>} />
+
+        {/* Intern Routes */}
+        <Route path="/intern/dashboard" element={<ProtectedRoute allowedRoles={['INTERN']}><InternDashboard /></ProtectedRoute>} />
+        <Route path="/intern/profile" element={<ProtectedRoute allowedRoles={['INTERN']}><InternProfile /></ProtectedRoute>} />
+        <Route path="/intern/tasks" element={<ProtectedRoute allowedRoles={['INTERN']}><InternTasks /></ProtectedRoute>} />
+        <Route path="/intern/reports" element={<ProtectedRoute allowedRoles={['INTERN']}><InternReports /></ProtectedRoute>} />
 
         {/* Default */}
         <Route path="/" element={<Navigate to="/login" replace />} />

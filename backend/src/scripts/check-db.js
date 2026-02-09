@@ -18,11 +18,12 @@ async function checkDatabase() {
         if (users.length > 0) {
             console.log('\n📝 Last 10 Users:');
             console.table(users.map(u => ({
-                Name: u.fullName,
+                Name: u.fullName || u.name,
                 Email: u.email,
                 Role: u.role,
-                Company: u.companyId,
-                Created: u.createdAt.toLocaleString()
+                RoleType: typeof u.role,
+                RoleLen: u.role ? u.role.length : 0,
+                Company: u.companyId
             })));
         } else {
             console.log('⚠️ No users found in the database yet.');

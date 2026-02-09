@@ -7,7 +7,6 @@ const menuItems = [
   { path: '/admin/users', label: 'User Management', icon: '👥' },
   { path: '/admin/attendance', label: 'Attendance', icon: '📅' },
   { path: '/admin/geo-logs', label: 'Geo-Location Logs', icon: '📍' },
-  { path: '/admin/reports', label: 'Work Reports', icon: '📝' },
   { path: '/admin/export', label: 'Export Center', icon: '📤' },
   { path: '/admin/settings', label: 'Settings', icon: '⚙️' },
 ];
@@ -34,7 +33,7 @@ export default function AdminLayout({ children }) {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
-      <aside 
+      <aside
         className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-white shadow-lg transition-all duration-300 fixed h-full z-10`}
       >
         {/* Logo */}
@@ -42,7 +41,7 @@ export default function AdminLayout({ children }) {
           {sidebarOpen && (
             <h1 className="text-xl font-bold text-blue-600">Admin Portal</h1>
           )}
-          <button 
+          <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="p-2 rounded-lg hover:bg-gray-100 text-gray-500"
           >
@@ -56,11 +55,10 @@ export default function AdminLayout({ children }) {
             <Link
               key={item.path}
               to={item.path}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
-                isActive(item.path)
-                  ? 'bg-blue-500 text-white'
-                  : 'text-gray-600 hover:bg-blue-50 hover:text-blue-600'
-              }`}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${isActive(item.path)
+                ? 'bg-blue-500 text-white'
+                : 'text-gray-600 hover:bg-blue-50 hover:text-blue-600'
+                }`}
             >
               <span className="text-xl">{item.icon}</span>
               {sidebarOpen && <span>{item.label}</span>}

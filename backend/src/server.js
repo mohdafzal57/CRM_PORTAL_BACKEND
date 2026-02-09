@@ -15,6 +15,7 @@ const connectDB = require('./config/db');
 // Import routes
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const internRoutes = require('./routes/internRoutes');
 
 // Initialize express app
 const app = express();
@@ -27,7 +28,7 @@ connectDB();
 // Enable CORS for frontend
 const allowedOrigins = process.env.FRONTEND_URL
     ? process.env.FRONTEND_URL.split(',').map(o => o.trim())
-    : ['http://localhost:3000', 'http://localhost:5173'];
+    : ['http://localhost:3000', 'http://localhost:5173', 'https://cscas.vercel.app'];
 
 app.use(cors({
     origin: function (origin, callback) {
@@ -69,6 +70,8 @@ if (process.env.NODE_ENV === 'development') {
 app.use('/api/auth', authRoutes);
 // Admin Routes
 app.use('/api/admin', adminRoutes);
+// Intern Routes
+app.use('/api/intern', internRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -128,6 +131,14 @@ app.use((err, req, res, next) => {
         return res.status(401).json({
             success: false,
             message: 'Token expired'
+        });
+    }
+
+    // Mongoose cast error (invalid ID)
+    if (err.name === 'CastError') {
+        return res.status(400).json({
+            success: false,
+            message: `Invalid resource ID: ${err.value}`
         });
     }
 

@@ -58,6 +58,21 @@ export const exportData = async (type, format, filters = {}) => {
   window.URL.revokeObjectURL(url);
 };
 
+// Intern Management
+export const getInternDetails = (userId) => {
+  const sanitizedId = String(userId).trim();
+  return API.get(`/admin/interns/${sanitizedId}`);
+};
+export const updateInternDetailsByAdmin = (userId, data) => {
+  const sanitizedId = String(userId).trim();
+  return API.put(`/admin/interns/${sanitizedId}`, data);
+};
+
+export const assignTaskToIntern = (userId, taskData) => {
+  const sanitizedId = String(userId).trim();
+  return API.post(`/admin/interns/${sanitizedId}/assign-task`, taskData);
+};
+
 // Settings
 export const getSettings = () => API.get('/admin/settings');
 export const updateSettings = (data) => API.put('/admin/settings', data);

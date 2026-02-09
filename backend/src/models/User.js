@@ -56,11 +56,10 @@ const userSchema = new mongoose.Schema({
         sparse: true // Allow null for existing users not yet assigned
     },
 
-    // Password - will be hashed before saving
     password: {
         type: String,
         required: [true, 'Password is required'],
-        minlength: [8, 'Password must be at least 8 characters'],
+        minlength: [6, 'Password must be at least 6 characters'],
         select: false // Don't include password in queries by default
     },
 
