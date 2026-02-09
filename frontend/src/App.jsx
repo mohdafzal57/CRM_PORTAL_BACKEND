@@ -1,23 +1,23 @@
 // src/App.jsx - FULL WORKING VERSION
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 
 // Import your existing pages
-import Register from './pages/Register';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import {
   Dashboard as AdminDashboard,
-  UserManagement,
   AttendanceReports as AttendancePage,
   GeoLocationLogs as GeoLogsPage,
-  WorkReports as ReportsPage
+  WorkReports as ReportsPage,
+  UserManagement
 } from './pages/admin';
 
 // Intern Pages
 import InternDashboard from './pages/intern/Dashboard';
 import InternProfile from './pages/intern/Profile';
-import InternTasks from './pages/intern/Tasks';
 import InternReports from './pages/intern/Reports';
+import InternTasks from './pages/intern/Tasks';
 
 // ============ PLACEHOLDER/UTILITY COMPONENTS ============
 
@@ -111,5 +111,23 @@ function App() {
     </Router>
   );
 }
+
+
+import { BrowserRouter } from "react-router-dom";
+import AttendanceCorrection from "./pages/AttendanceCorrection";
+import AttendanceHistory from "./pages/AttendanceHistory";
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/attendance/history" element={<AttendanceHistory />} />
+        <Route path="/attendance/correction" element={<AttendanceCorrection />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+
 
 export default App;

@@ -13,6 +13,7 @@ const AttendanceSchema = new mongoose.Schema({
   date: {
     type: Date,
     required: true,
+    set: (v) => new Date(v.setHours(0,0,0,0))
   },
   checkIn: {
     time: Date,
