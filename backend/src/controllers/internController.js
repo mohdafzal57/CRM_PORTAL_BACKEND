@@ -3,7 +3,7 @@
  * Handles operations specific to interns
  */
 
-const Intern = require('../models/Intern');
+// Intern model removed, using User model directly
 const User = require('../models/User');
 
 /**
@@ -13,19 +13,32 @@ const User = require('../models/User');
  */
 exports.getInternProfile = async (req, res, next) => {
     try {
-        const intern = await Intern.findOne({ userId: req.user.id })
-            .populate('userId', 'fullName email mobile department designation profilePicture');
+        const user = await User.findById(req.user.id);
 
-        if (!intern) {
+        if (!user || !user.internDetails) {
             return res.status(404).json({
                 success: false,
                 message: 'Intern profile not found'
             });
         }
 
+        // Construct response to match previous structure
+        const responseData = {
+            ...user.internDetails, // This spreads properties (personal, education, _id of subdoc etc)
+            userId: {
+                _id: user._id,
+                fullName: user.fullName,
+                email: user.email,
+                mobile: user.mobile,
+                department: user.department,
+                designation: user.designation,
+                profilePicture: user.profilePicture
+            }
+        };
+
         res.json({
             success: true,
-            data: intern
+            data: responseData
         });
     } catch (error) {
         console.error('Get Intern Profile Error:', error);
@@ -45,28 +58,27 @@ exports.updateInternProfile = async (req, res, next) => {
         // Interns can ONLY update Personal and Education details
         // Internship and Project Work are managed by Admin/HR
 
-        const intern = await Intern.findOneAndUpdate(
-            { userId: req.user.id },
-            {
-                $set: {
-                    personal,
-                    education
-                }
-            },
-            { new: true, runValidators: true }
-        );
+        const user = await User.findById(req.user.id);
 
-        if (!intern) {
-            return res.status(404).json({
-                success: false,
-                message: 'Intern profile not found'
-            });
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
         }
+
+        // Update fields if provided
+        if (personal) user.internDetails.personal = { ...user.internDetails.personal, ...personal };
+        if (education) user.internDetails.education = { ...user.internDetails.education, ...education };
+
+        await user.save();
+
+        const responseData = {
+            ...user.internDetails,
+            userId: user._id
+        };
 
         res.json({
             success: true,
             message: 'Profile updated successfully',
-            data: intern
+            data: responseData
         });
     } catch (error) {
         console.error('Update Intern Profile Error:', error);
@@ -83,27 +95,29 @@ exports.submitDailyTask = async (req, res, next) => {
     try {
         const { task, status } = req.body;
 
-        const intern = await Intern.findOne({ userId: req.user.id });
+        const user = await User.findById(req.user.id);
 
-        if (!intern) {
+        if (!user || user.role !== 'INTERN') {
             return res.status(404).json({
                 success: false,
                 message: 'Intern profile not found'
             });
         }
 
-        intern.academicWork.dailyTaskUpdate.push({
+        user.internDetails.academicWork.dailyTaskUpdate.push({
             task,
             status,
             date: new Date()
         });
 
-        await intern.save();
+        await user.save();
+
+        const updates = user.internDetails.academicWork.dailyTaskUpdate;
 
         res.status(201).json({
             success: true,
             message: 'Task updated successfully',
-            data: intern.academicWork.dailyTaskUpdate[intern.academicWork.dailyTaskUpdate.length - 1]
+            data: updates[updates.length - 1]
         });
     } catch (error) {
         console.error('Submit Task Error:', error);
@@ -118,10 +132,9 @@ exports.submitDailyTask = async (req, res, next) => {
  */
 exports.getTaskHistory = async (req, res, next) => {
     try {
-        const intern = await Intern.findOne({ userId: req.user.id })
-            .select('academicWork.dailyTaskUpdate');
+        const user = await User.findById(req.user.id);
 
-        if (!intern) {
+        if (!user || !user.internDetails) {
             return res.status(404).json({
                 success: false,
                 message: 'Intern profile not found'
@@ -130,7 +143,7 @@ exports.getTaskHistory = async (req, res, next) => {
 
         res.json({
             success: true,
-            data: intern.academicWork.dailyTaskUpdate
+            data: user.internDetails.academicWork.dailyTaskUpdate
         });
     } catch (error) {
         console.error('Get Task History Error:', error);
@@ -147,27 +160,26 @@ exports.submitWeeklyReport = async (req, res, next) => {
     try {
         const { report, weekNumber } = req.body;
 
-        const intern = await Intern.findOne({ userId: req.user.id });
+        const user = await User.findById(req.user.id);
 
-        if (!intern) {
-            return res.status(404).json({
-                success: false,
-                message: 'Intern profile not found'
-            });
+        if (!user || user.role !== 'INTERN') {
+            return res.status(404).json({ success: false, message: 'Intern profile not found' });
         }
 
-        intern.academicWork.weeklyProgressReport.push({
+        user.internDetails.academicWork.weeklyProgressReport.push({
             weekNumber,
             report,
             submittedAt: new Date()
         });
 
-        await intern.save();
+        await user.save();
+
+        const reports = user.internDetails.academicWork.weeklyProgressReport;
 
         res.status(201).json({
             success: true,
             message: 'Weekly report submitted successfully',
-            data: intern.academicWork.weeklyProgressReport[intern.academicWork.weeklyProgressReport.length - 1]
+            data: reports[reports.length - 1]
         });
     } catch (error) {
         console.error('Submit Weekly Report Error:', error);
@@ -181,19 +193,15 @@ exports.submitWeeklyReport = async (req, res, next) => {
  */
 exports.getAssignedTasks = async (req, res, next) => {
     try {
-        const intern = await Intern.findOne({ userId: req.user.id })
-            .select('assignedTasks');
+        const user = await User.findById(req.user.id);
 
-        if (!intern) {
-            return res.status(404).json({
-                success: false,
-                message: 'Intern profile not found'
-            });
+        if (!user || !user.internDetails) {
+            return res.status(404).json({ success: false, message: 'Intern profile not found' });
         }
 
         res.json({
             success: true,
-            data: intern.assignedTasks
+            data: user.internDetails.assignedTasks
         });
     } catch (error) {
         console.error('Get Assigned Tasks Error:', error);
@@ -211,16 +219,13 @@ exports.updateAssignedTaskStatus = async (req, res, next) => {
         const { taskId } = req.params;
         const { status } = req.body;
 
-        const intern = await Intern.findOne({ userId: req.user.id });
+        const user = await User.findById(req.user.id);
 
-        if (!intern) {
-            return res.status(404).json({
-                success: false,
-                message: 'Intern profile not found'
-            });
+        if (!user || !user.internDetails) {
+            return res.status(404).json({ success: false, message: 'Intern profile not found' });
         }
 
-        const task = intern.assignedTasks.id(taskId);
+        const task = user.internDetails.assignedTasks.id(taskId);
 
         if (!task) {
             return res.status(404).json({
@@ -230,7 +235,7 @@ exports.updateAssignedTaskStatus = async (req, res, next) => {
         }
 
         task.status = status;
-        await intern.save();
+        await user.save();
 
         res.json({
             success: true,

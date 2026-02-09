@@ -6,7 +6,6 @@ const User = require('../models/User'); // Existing model
 const Company = require('../models/Company'); // Existing model
 const Attendance = require('../models/Attendance'); // New model
 const WorkReport = require('../models/WorkReport'); // New model
-const Intern = require('../models/Intern'); // Intern detail model
 const { generateExcel, generatePDF } = require('../utils/exportUtils');
 
 // ==================== DASHBOARD ====================
@@ -156,17 +155,17 @@ exports.createUser = async (req, res, next) => {
 
     if (isIntern) {
       // Find the last intern ID to ensure uniqueness even after deletions
-      const lastIntern = await Intern.findOne().sort({ internId: -1 });
+      const lastIntern = await User.findOne({ role: 'INTERN' }).sort({ 'internDetails.internId': -1 });
       let nextId = 1;
-      if (lastIntern && lastIntern.internId) {
-        const lastIdNum = parseInt(lastIntern.internId.replace('INTN', ''), 10);
+      if (lastIntern && lastIntern.internDetails && lastIntern.internDetails.internId) {
+        const lastIdNum = parseInt(lastIntern.internDetails.internId.replace('INTN', ''), 10);
         if (!isNaN(lastIdNum)) {
           nextId = lastIdNum + 1;
         }
       }
       trackingId = `INTN${String(nextId).padStart(5, '0')}`;
     } else {
-      // Logic for employees (optional: can be improved similarly if needed, but keeping simple for now)
+      // Logic for employees
       const empCount = await User.countDocuments({ role: { $ne: 'INTERN' } });
       trackingId = `EMP${String(empCount + 1).padStart(5, '0')}`;
     }
@@ -182,24 +181,16 @@ exports.createUser = async (req, res, next) => {
       designation,
       employeeId: !isIntern ? trackingId : undefined,
       isActive: true,
-      createdBy: req.user._id // From existing auth middleware
+      createdBy: req.user._id, // From existing auth middleware
+      internDetails: isIntern ? { internId: trackingId } : undefined
     });
 
     await user.save();
 
-    // If it's an intern, create the Intern detail record
-    if (isIntern) {
-      await Intern.create({
-        userId: user._id,
-        internId: trackingId,
-        // Other fields will be filled during profile update by the intern
-      });
-    }
-
     res.status(201).json({
       success: true,
       message: `${isIntern ? 'Intern' : 'User'} created successfully`,
-      data: { ...user.toObject(), password: undefined, internId: isIntern ? trackingId : undefined }
+      data: { ...user.toObject(), password: undefined }
     });
   } catch (error) {
     console.error('Create user error:', error);
@@ -280,9 +271,8 @@ exports.deleteUser = async (req, res) => {
     }
 
     // If user is an INTERN, delete their intern profile as well
-    if (user.role === 'INTERN') {
-      await Intern.findOneAndDelete({ userId: id });
-    }
+    // Already handled by deleting the user document since internDetails are embedded
+
 
     await User.findByIdAndDelete(id);
 
@@ -691,17 +681,31 @@ exports.getInternDetails = async (req, res, next) => {
         return res.status(400).json({ success: false, message: 'Selected user is not an intern' });
       }
 
-      const intern = await Intern.findOne({ userId })
-        .populate('userId', 'fullName email mobile department designation profilePicture isActive');
+      // Return user data including internDetails
+      console.log('✅ Intern details found:', user.fullName);
+      console.log('Weekly Reports Count:', user.internDetails?.academicWork?.weeklyProgressReport?.length);
 
-      if (!intern) {
-        console.log('❌ Intern details record missing (Intern profile not initialized)');
-        return res.status(404).json({ success: false, message: 'Intern profile details not initialized' });
-      }
+      // Structure the response to match what frontend expects (or update frontend)
+      // Frontend likely expects { data: { userId: {...userFields}, ...internFields } }
+      // We can reconstruct that structure or return the user object directly if frontend handles it.
+      // Let's try to match existing structure: { ...internDetails, userId: userObject }
 
-      console.log('✅ Intern details found:', intern.userId?.fullName);
-      console.log('Weekly Reports Count:', intern.academicWork?.weeklyProgressReport?.length);
-      res.json({ success: true, data: intern });
+      const responseData = {
+        ...user.internDetails, // Spread intern details
+        userId: { // Nest user details under userId key as expected by frontend
+          _id: user._id,
+          fullName: user.fullName,
+          email: user.email,
+          mobile: user.mobile,
+          department: user.department,
+          designation: user.designation,
+          profilePicture: user.profilePicture,
+          isActive: user.isActive
+        },
+        _id: user.internDetails?._id || user._id // Ensure an ID exists
+      };
+
+      res.json({ success: true, data: responseData });
     } catch (dbError) {
       console.error('Database Query Error:', dbError);
       // If CastError, this will be caught by global handler, but let's log specifically here.
@@ -740,7 +744,7 @@ exports.diagnoseIntern = async (req, res) => {
       };
     }
 
-    const intern = await Intern.findOne({ userId });
+    const intern = user.internDetails;
     result.internRecordFound = !!intern;
     if (intern) {
       result.internData = {
@@ -779,17 +783,31 @@ exports.updateInternByAdmin = async (req, res, next) => {
     // Admin is only allowed to update internship settings and project status
     // Personal & Education are intern-filled
 
-    const intern = await Intern.findOneAndUpdate(
-      { userId },
-      { $set: { internship, projectWork } },
+    // Admin is only allowed to update internship settings and project status
+    // Personal & Education are intern-filled
+
+    // We need to update specific fields in internDetails
+    const updateQuery = {};
+    if (internship) updateQuery['internDetails.internship'] = internship;
+    if (projectWork) updateQuery['internDetails.projectWork'] = projectWork;
+
+    const user = await User.findOneAndUpdate(
+      { _id: userId },
+      { $set: updateQuery },
       { new: true, runValidators: true }
     );
 
-    if (!intern) {
+    if (!user) {
       return res.status(404).json({ success: false, message: 'Intern not found' });
     }
 
-    res.json({ success: true, message: 'Intern details updated successfully', data: intern });
+    // Construct response matching previous format
+    const responseData = {
+      ...user.internDetails,
+      userId: user._id
+    };
+
+    res.json({ success: true, message: 'Intern details updated successfully', data: responseData });
   } catch (error) {
     console.error('Update intern by admin error:', error);
     next(error);
@@ -806,10 +824,17 @@ exports.assignTaskToIntern = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Task title is required' });
     }
 
-    const intern = await Intern.findOne({ userId });
+    const user = await User.findById(userId);
 
-    if (!intern) {
-      return res.status(404).json({ success: false, message: 'Intern profile not found' });
+    if (!user || user.role !== 'INTERN') {
+      return res.status(404).json({ success: false, message: 'Intern not found' });
+    }
+
+    if (!user.internDetails) {
+      user.internDetails = {}; // Should depend on schema defaults but safe to init
+    }
+    if (!user.internDetails.assignedTasks) {
+      user.internDetails.assignedTasks = [];
     }
 
     const newTask = {
@@ -820,13 +845,13 @@ exports.assignTaskToIntern = async (req, res) => {
       assignedDate: new Date()
     };
 
-    intern.assignedTasks.push(newTask);
-    await intern.save();
+    user.internDetails.assignedTasks.push(newTask);
+    await user.save();
 
     res.status(201).json({
       success: true,
       message: 'Task assigned successfully',
-      data: intern.assignedTasks[intern.assignedTasks.length - 1]
+      data: user.internDetails.assignedTasks[user.internDetails.assignedTasks.length - 1]
     });
   } catch (error) {
     console.error('Assign Task Error:', error);
