@@ -113,20 +113,20 @@ function App() {
 }
 
 
-import { BrowserRouter } from "react-router-dom";
-import AttendanceCorrection from "./pages/AttendanceCorrection";
-import AttendanceHistory from "./pages/AttendanceHistory";
+// import { BrowserRouter } from "react-router-dom";
+// import AttendanceCorrection from "./pages/AttendanceCorrection";
+// import AttendanceHistory from "./pages/AttendanceHistory";
 
-function App() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/attendance/history" element={<AttendanceHistory />} />
-        <Route path="/attendance/correction" element={<AttendanceCorrection />} />
-      </Routes>
-    </BrowserRouter>
-  );
-}
+// function App() {
+//   return (
+//     <BrowserRouter>
+//       <Routes>
+//         <Route path="/attendance/history" element={<AttendanceHistory />} />
+//         <Route path="/attendance/correction" element={<AttendanceCorrection />} />
+//       </Routes>
+//     </BrowserRouter>
+//   );
+// }
 
 
 

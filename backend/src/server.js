@@ -26,9 +26,7 @@ connectDB();
 // ==================== MIDDLEWARE ====================
 
 // Enable CORS for frontend
-const allowedOrigins = process.env.FRONTEND_URL
-    ? process.env.FRONTEND_URL.split(',').map(o => o.trim())
-    : ['http://localhost:3000', 'http://localhost:5173', 'https://cscas.vercel.app'];
+const allowedOrigins = process.env.FRONTEND_URL.split(',');
 
 app.use(cors({
     origin: function (origin, callback) {
