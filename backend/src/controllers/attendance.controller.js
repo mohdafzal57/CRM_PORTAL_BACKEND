@@ -156,4 +156,68 @@ exports.checkOut = async (req, res) => {
       res.status(500).json({ message: "Server error" });
     }
   };
+  const AttendanceCorrection = require("../models/AttendanceCorrection");
+
+exports.requestCorrection = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { date, reason } = req.body;
+
+    if (!date || !reason) {
+      return res.status(400).json({ message: "Date and reason are required" });
+    }
+
+    const reqDate = new Date(date);
+    reqDate.setHours(0, 0, 0, 0);
+
+    const request = await AttendanceCorrection.create({
+      user: userId,
+      date: reqDate,
+      reason
+    });
+
+    res.status(201).json({
+      message: "Correction request submitted",
+      request
+    });
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({
+        message: "Correction request already exists for this date"
+      });
+    }
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+exports.reviewCorrection = async (req, res) => {
+    try {
+      const reviewerId = req.user.id;
+      const { requestId } = req.params;
+      const { status, note } = req.body;
+  
+      if (!["APPROVED", "REJECTED"].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+  
+      const request = await AttendanceCorrection.findById(requestId);
+      if (!request) {
+        return res.status(404).json({ message: "Request not found" });
+      }
+  
+      request.status = status;
+      request.reviewedBy = reviewerId;
+      request.reviewNote = note || "";
+  
+      await request.save();
+  
+      res.json({
+        message: `Correction ${status.toLowerCase()}`,
+        request
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Server error" });
+    }
+  };
      
