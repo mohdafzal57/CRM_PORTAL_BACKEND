@@ -10,7 +10,9 @@ import {
   AttendanceReports as AttendancePage,
   GeoLocationLogs as GeoLogsPage,
   WorkReports as ReportsPage,
-  UserManagement
+  UserManagement,
+  ExportCenter,
+  SettingsPage
 } from './pages/admin';
 
 // Intern Pages
@@ -89,8 +91,8 @@ function App() {
         <Route path="/admin/attendance" element={<ProtectedRoute allowedRoles={['ADMIN']}><AttendancePage /></ProtectedRoute>} />
         <Route path="/admin/geo-logs" element={<ProtectedRoute allowedRoles={['ADMIN']}><GeoLogsPage /></ProtectedRoute>} />
         <Route path="/admin/reports" element={<ProtectedRoute allowedRoles={['ADMIN']}><ReportsPage /></ProtectedRoute>} />
-        <Route path="/admin/export" element={<ProtectedRoute allowedRoles={['ADMIN']}><div>Export Center Coming Soon</div></ProtectedRoute>} />
-        <Route path="/admin/settings" element={<ProtectedRoute allowedRoles={['ADMIN']}><div>Settings Coming Soon</div></ProtectedRoute>} />
+        <Route path="/admin/export" element={<ProtectedRoute allowedRoles={['ADMIN']}><ExportCenter/></ProtectedRoute>} />
+        <Route path="/admin/settings" element={<ProtectedRoute allowedRoles={['ADMIN']}><SettingsPage/></ProtectedRoute>} />
         <Route path="/admin/dashboard" element={<Navigate to="/admin" replace />} />
 
         {/* Other Role Dashboards */}

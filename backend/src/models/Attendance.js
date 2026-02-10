@@ -1,19 +1,14 @@
-// models/Attendance.js
-// NEW MODULE - Attendance tracking with geo-location support
-// Integrates with existing User and Company models
-
 const mongoose = require('mongoose');
 
-const AttendanceSchema = new mongoose.Schema({
+const attendanceSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User', // References existing User model
-    required: true,
+    ref: 'User',
+    required: true
   },
   date: {
     type: Date,
-    required: true,
-    set: (v) => new Date(v.setHours(0,0,0,0))
+    required: true
   },
   checkIn: {
     time: Date,
@@ -22,8 +17,17 @@ const AttendanceSchema = new mongoose.Schema({
       longitude: Number,
       address: String
     },
-    isWithinOffice: { type: Boolean, default: false },
-    deviceInfo: String
+    isWithinOffice: {
+      type: Boolean,
+      default: false
+    },
+    photo: String,
+    deviceInfo: {
+      deviceId: String,
+      deviceType: String,
+      browser: String,
+      os: String
+    }
   },
   checkOut: {
     time: Date,
@@ -32,63 +36,66 @@ const AttendanceSchema = new mongoose.Schema({
       longitude: Number,
       address: String
     },
-    isWithinOffice: { type: Boolean, default: false }
+    isWithinOffice: {
+      type: Boolean,
+      default: false
+    },
+    photo: String
   },
   status: {
     type: String,
-    enum: ['PRESENT', 'ABSENT', 'HALF_DAY', 'LATE', 'ON_LEAVE', 'HOLIDAY', 'WEEKEND'],
+    enum: ['PRESENT', 'ABSENT', 'LATE', 'HALF_DAY', 'ON_LEAVE', 'HOLIDAY', 'WEEKEND'],
     default: 'ABSENT'
   },
-  workHours: { type: Number, default: 0 }, // in minutes
-  overtimeHours: { type: Number, default: 0 },
+  workHours: {
+    type: Number, // in minutes
+    default: 0
+  },
+  overtimeHours: {
+    type: Number,
+    default: 0
+  },
+  breaks: [{
+    startTime: Date,
+    endTime: Date,
+    duration: Number,
+    reason: String
+  }],
   notes: String,
   approvedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
-  isManualEntry: { type: Boolean, default: false }
-}, { 
-  timestamps: true,
-  toJSON: { virtuals: true }
+  isManualEntry: {
+    type: Boolean,
+    default: false
+  },
+  manualEntryReason: String
+}, {
+  timestamps: true
 });
 
-// Compound index for unique daily attendance
-AttendanceSchema.index({ user: 1, date: 1 }, { unique: true });
+// Indexes
+attendanceSchema.index({ user: 1, date: 1 }, { unique: true });
+attendanceSchema.index({ date: 1 });
+attendanceSchema.index({ status: 1 });
 
-AttendanceSchema.index({ status: 1 });
-
-// Virtual for formatted work hours
-AttendanceSchema.virtual('formattedWorkHours').get(function() {
-  const hours = Math.floor(this.workHours / 60);
-  const mins = this.workHours % 60;
-  return `${hours}h ${mins}m`;
-});
-
-// Static method to check if location is within office radius
-AttendanceSchema.statics.isWithinOfficeRadius = function(userLat, userLng, officeLat, officeLng, radiusKm = 0.1) {
-  const toRad = (deg) => deg * (Math.PI / 180);
-  const R = 6371; // Earth's radius in km
-  
-  const dLat = toRad(officeLat - userLat);
-  const dLng = toRad(officeLng - userLng);
-  
-  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-            Math.cos(toRad(userLat)) * Math.cos(toRad(officeLat)) *
-            Math.sin(dLng/2) * Math.sin(dLng/2);
-  
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  const distance = R * c;
-  
-  return distance <= radiusKm;
-};
-
-// Calculate work hours on save
-AttendanceSchema.pre('save', function(next) {
+// Calculate work hours before saving
+attendanceSchema.pre('save', function(next) {
   if (this.checkIn?.time && this.checkOut?.time) {
-    const diff = this.checkOut.time - this.checkIn.time;
-    this.workHours = Math.round(diff / (1000 * 60)); // Convert to minutes
+    const checkInTime = new Date(this.checkIn.time);
+    const checkOutTime = new Date(this.checkOut.time);
+    
+    let totalMinutes = Math.floor((checkOutTime - checkInTime) / (1000 * 60));
+    
+    if (this.breaks && this.breaks.length > 0) {
+      const breakMinutes = this.breaks.reduce((acc, b) => acc + (b.duration || 0), 0);
+      totalMinutes -= breakMinutes;
+    }
+    
+    this.workHours = Math.max(0, totalMinutes);
   }
   next();
 });
 
-module.exports = mongoose.model('Attendance', AttendanceSchema);
+module.exports = mongoose.model('Attendance', attendanceSchema);
