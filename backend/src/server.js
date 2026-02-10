@@ -153,17 +153,7 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 9999;
 
 const server = app.listen(PORT, () => {
-    console.log(`
-╔════════════════════════════════════════════════════════╗
-║                                                        ║
-║   🚀 Employee CRM Portal Server Running               ║
-║                                                        ║
-║   📍 Local:    http://localhost:${PORT}                  ║
-║   🌍 Mode:     ${process.env.NODE_ENV || 'development'}                          ║
-║   📅 Started:  ${new Date().toLocaleString()}              ║
-║                                                        ║
-╚════════════════════════════════════════════════════════╝
-    `);
+    console.log(`http://localhost:${PORT}`);
 });
 
 // Handle unhandled promise rejections
