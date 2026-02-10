@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useToast } from '../../context/ToastContext';
 import AdminLayout from '../../components/AdminLayout';
 import { Card, Button } from '../../components/admin/ui';
 import * as api from '../../services/adminApi';
@@ -43,6 +44,7 @@ const QUICK_EXPORTS = [
 ];
 
 const ExportCenter = () => {
+  const { success: showSuccess, error: showError } = useToast();
   const [loading, setLoading] = useState(false);
   const [exportType, setExportType] = useState('users');
   const [exportFormat, setExportFormat] = useState('excel');
@@ -51,9 +53,9 @@ const ExportCenter = () => {
     setLoading(true);
     try {
       await api.exportData(exportType, exportFormat);
-      alert('Export started! File will download shortly.');
+      showSuccess('Export started! File will download shortly.');
     } catch (err) {
-      alert('Export failed: ' + (err.response?.data?.message || err.message));
+      showError('Export failed: ' + (err.response?.data?.message || err.message));
     } finally {
       setLoading(false);
     }
@@ -62,9 +64,9 @@ const ExportCenter = () => {
   const handleQuickExport = async (type, format) => {
     try {
       await api.exportData(type, format);
-      alert('Export started! File will download shortly.');
+      showSuccess('Export started! File will download shortly.');
     } catch (err) {
-      alert('Export failed: ' + (err.response?.data?.message || err.message));
+      showError('Export failed: ' + (err.response?.data?.message || err.message));
     }
   };
 
@@ -91,11 +93,10 @@ const ExportCenter = () => {
                 <button
                   key={item.value}
                   onClick={() => setExportType(item.value)}
-                  className={`p-4 rounded-xl border-2 transition-all ${
-                    exportType === item.value
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-blue-300'
-                  }`}
+                  className={`p-4 rounded-xl border-2 transition-all ${exportType === item.value
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'border-gray-200 hover:border-blue-300'
+                    }`}
                 >
                   <div className="text-2xl mb-2">{item.icon}</div>
                   <span className="text-sm font-medium">{item.label}</span>

@@ -67,7 +67,7 @@ const GeoLocationLogs = () => {
               <tbody>
                 {logs.map((log) => (
                   <tr key={log._id} className="border-b hover:bg-gray-50">
-                    <td className="py-3 px-4">{log.user?.name || 'Unknown'}</td>
+                    <td className="py-3 px-4">{log.user?.fullName || 'Unknown'}</td>
                     <td className="py-3 px-4">
                       {new Date(log.date).toLocaleDateString()}
                     </td>

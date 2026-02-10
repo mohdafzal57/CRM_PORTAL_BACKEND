@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import InternLayout from '../../components/InternLayout';
 import internApi from '../../services/internApi';
+import { useToast } from '../../context/ToastContext';
 
 const Card = ({ children, title, className = '' }) => (
     <div className={`bg-white rounded-xl shadow-sm border border-gray-100 p-6 ${className}`}>
@@ -45,6 +46,7 @@ export default function Profile() {
         internship: { domain: '', type: '', startDate: '', endDate: '', mode: '', assignedBatch: '', dailyWorkingHours: '' },
         projectWork: { projectTitle: '' }
     });
+    const { success: showSuccess, error: showError } = useToast();
 
     useEffect(() => {
         fetchProfile();
@@ -95,11 +97,11 @@ export default function Profile() {
         setSaving(true);
         try {
             await internApi.updateProfile(formData);
-            alert('Profile updated successfully!');
+            showSuccess('Profile updated successfully!');
             fetchProfile();
         } catch (err) {
             console.error('Update error:', err);
-            alert('Failed to update profile');
+            showError('Failed to update profile');
         } finally {
             setSaving(false);
         }
@@ -289,6 +291,7 @@ export default function Profile() {
                     </button>
                 </div>
             </form>
+
         </InternLayout>
     );
 }

@@ -1,29 +1,20 @@
-// src/pages/intern/Dashboard.jsx
 import React, { useState, useEffect } from 'react';
 import InternLayout from '../../components/InternLayout';
 import internApi from '../../services/internApi';
-
-const Card = ({ children, className = '' }) => (
-    <div className={`bg-white rounded-xl shadow-sm border border-gray-100 p-6 ${className}`}>
-        {children}
-    </div>
-);
-
-const Badge = ({ children, variant = 'default' }) => {
-    const variants = {
-        default: 'bg-gray-100 text-gray-700',
-        success: 'bg-green-100 text-green-700',
-        warning: 'bg-yellow-100 text-yellow-700',
-        info: 'bg-blue-100 text-blue-700',
-    };
-    return (
-        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${variants[variant]}`}>
-            {children}
-        </span>
-    );
-};
-
-export default function Dashboard() {
+import {
+    Clock,
+    Calendar,
+    FileCheck,
+    Zap,
+    TrendingUp,
+    CheckCircle2,
+    PlayCircle,
+    Briefcase,
+    UserCheck,
+    BookOpen
+} from 'lucide-react';
+// Recharts removed
+const Dashboard = () => {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -45,86 +36,125 @@ export default function Dashboard() {
         }
     };
 
-    if (loading) return <InternLayout><div className="flex items-center justify-center min-h-[60vh] text-2xl">⏳ Loading...</div></InternLayout>;
+    if (loading) {
+        return (
+            <InternLayout>
+                <div className="flex items-center justify-center min-h-[60vh]">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+                </div>
+            </InternLayout>
+        );
+    }
+
+    const stats = [
+        {
+            label: 'Internship Domain',
+            value: profile?.internship?.domain || 'N/A',
+            trend: 'Active',
+            icon: Briefcase,
+            color: 'text-indigo-600',
+            bg: 'bg-indigo-50'
+        },
+        {
+            label: 'Mentor Assigned',
+            value: profile?.internship?.assignedMentor || 'TBD',
+            trend: 'Verified',
+            icon: UserCheck,
+            color: 'text-emerald-600',
+            bg: 'bg-emerald-50'
+        },
+        {
+            label: 'Project Status',
+            value: profile?.projectWork?.finalProjectSubmitted ? 'Submitted' : 'Pending',
+            trend: profile?.projectWork?.finalProjectSubmitted ? 'Done' : 'In Progress',
+            icon: FileCheck,
+            color: 'text-amber-600',
+            bg: 'bg-amber-50'
+        },
+        {
+            label: 'Total Tasks',
+            value: profile?.academicWork?.dailyTaskUpdate?.length || 0,
+            trend: 'Updates',
+            icon: Zap,
+            color: 'text-rose-600',
+            bg: 'bg-rose-50'
+        },
+    ];
 
     return (
         <InternLayout>
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900">Intern Dashboard</h1>
-                <p className="text-gray-500 mt-1">Welcome back, {profile?.userId?.fullName}! Track your internship progress here.</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                <Card>
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-gray-500">Internship Domain</p>
-                            <p className="text-xl font-bold text-gray-900">{profile?.internship?.domain || 'Not Assigned'}</p>
+            <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-20">
+                {/* Header Section */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div>
+                        <h1 className="text-4xl font-[900] text-slate-800 tracking-tight">
+                            Intern <span className="text-indigo-600">Module.</span>
+                        </h1>
+                        <div className="text-slate-500 font-medium mt-1 uppercase tracking-widest text-[10px] font-black">
+                            Nexus Interns • {profile?.userId?.fullName} • {profile?.internship?.type || 'Standard'}
                         </div>
-                        <div className="text-3xl">💻</div>
                     </div>
-                </Card>
 
-                <Card>
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-gray-500">Internship Type</p>
-                            <p className="text-xl font-bold text-blue-600">{profile?.internship?.type || 'N/A'}</p>
+                    <div className="flex items-center gap-3">
+                        <button className="h-12 px-6 bg-white border border-slate-100 rounded-xl text-xs font-black uppercase tracking-widest text-slate-600 hover:text-indigo-600 transition-all shadow-sm flex items-center gap-2 active:scale-95">
+                            <PlayCircle className="w-4 h-4" /> Quick Check-In
+                        </button>
+                    </div>
+                </div>
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {stats.map((stat, idx) => (
+                        <div key={idx} className="glass-layer p-8 group hover:border-white transition-all duration-500 shadow-sm relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-24 h-24 bg-slate-100 rounded-full translate-x-12 -translate-y-12 transition-transform group-hover:scale-110"></div>
+                            <div className="flex justify-between items-start mb-6 relative z-10">
+                                <div className={`w-14 h-14 ${stat.bg} ${stat.color} rounded-2xl flex items-center justify-center transition-all duration-500 group-hover:scale-110 group-hover:rotate-3`}>
+                                    <stat.icon className="w-6 h-6" />
+                                </div>
+                                <div className="flex items-center gap-1.5 px-3 py-1 bg-white/60 rounded-lg border border-slate-50">
+                                    <TrendingUp className="w-3 h-3 text-emerald-500" />
+                                    <span className="text-[10px] font-black text-slate-600">{stat.trend}</span>
+                                </div>
+                            </div>
+                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1 relative z-10">{stat.label}</div>
+                            <div className="text-xl font-[1000] text-slate-800 tracking-tight relative z-10 truncate">{stat.value}</div>
                         </div>
-                        <div className="text-3xl">📅</div>
-                    </div>
-                </Card>
+                    ))}
+                </div>
 
-                <Card>
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-gray-500">Assigned Mentor</p>
-                            <p className="text-xl font-bold text-green-600">{profile?.internship?.assignedMentor || 'TBD'}</p>
+                <div className="grid grid-cols-1 gap-8">
+                    {/* Recent Task Updates Sidebar - Expanded to full width */}
+                    <div className="glass-layer p-10 bg-indigo-600/5 border-indigo-200/20">
+                        <div className="flex items-center justify-between mb-10">
+                            <h3 className="text-xl font-[900] text-slate-800 tracking-tight uppercase tracking-widest text-xs">Recent Updates</h3>
+                            <CheckCircle2 className="w-6 h-6 text-indigo-600 opacity-20" />
                         </div>
-                        <div className="text-3xl">👨‍🏫</div>
-                    </div>
-                </Card>
-            </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4">📝 Recent Task Updates</h2>
-                    {profile?.academicWork?.dailyTaskUpdate?.length > 0 ? (
                         <div className="space-y-4">
-                            {profile.academicWork.dailyTaskUpdate.slice(-3).reverse().map((task, idx) => (
-                                <div key={idx} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                                    <div className="text-xl">✅</div>
-                                    <div>
-                                        <p className="font-medium text-gray-900">{task.task}</p>
-                                        <p className="text-xs text-gray-500">{new Date(task.date).toLocaleDateString()}</p>
+                            {profile?.academicWork?.dailyTaskUpdate?.slice(-5).reverse().map((task, idx) => (
+                                <div key={idx} className="flex items-center justify-between p-4 bg-white/40 border border-transparent hover:border-white rounded-2xl transition-all group">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-indigo-600 text-white">
+                                            <CheckCircle2 className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <div className="text-xs font-black tracking-tight text-slate-800 line-clamp-1">
+                                                {task.task}
+                                            </div>
+                                            <div className="text-[9px] font-bold text-slate-400 mt-0.5 uppercase tracking-widest">{new Date(task.date).toLocaleDateString()}</div>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
-                        </div>
-                    ) : (
-                        <p className="text-gray-500 text-center py-4">No tasks submitted yet.</p>
-                    )}
-                    <a href="/intern/tasks" className="block text-center mt-4 text-sm text-blue-600 font-medium hover:underline">
-                        View All Tasks &rarr;
-                    </a>
-                </Card>
-
-                <Card>
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4">🎯 Milestone Tracking</h2>
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-gray-700">Final Project Submitted</span>
-                            <Badge variant={profile?.projectWork?.finalProjectSubmitted ? 'success' : 'warning'}>
-                                {profile?.projectWork?.finalProjectSubmitted ? 'Yes' : 'No'}
-                            </Badge>
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-gray-700">Project Title</span>
-                            <span className="text-sm text-gray-500">{profile?.projectWork?.projectTitle || 'Not Set'}</span>
+                            {(!profile?.academicWork?.dailyTaskUpdate || profile.academicWork.dailyTaskUpdate.length === 0) && (
+                                <div className="text-center text-slate-400 text-xs py-10">No recent updates</div>
+                            )}
                         </div>
                     </div>
-                </Card>
+                </div>
             </div>
         </InternLayout>
     );
-}
+};
+
+export default Dashboard;

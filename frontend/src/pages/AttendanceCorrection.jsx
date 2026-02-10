@@ -1,22 +1,24 @@
 import { useState } from "react";
+import { useToast } from "../context/ToastContext";
 import { requestAttendanceCorrection } from "../services/attendance.service";
 
 const AttendanceCorrection = () => {
+  const { success: showSuccess, error: showError, warning: showWarning } = useToast();
   const [date, setDate] = useState("");
   const [reason, setReason] = useState("");
 
   const submitRequest = async () => {
     if (!date || !reason) {
-      return alert("All fields required");
+      return showWarning("All fields required");
     }
 
     try {
       await requestAttendanceCorrection({ date, reason });
-      alert("Correction request submitted");
+      showSuccess("Correction request submitted");
       setDate("");
       setReason("");
     } catch (err) {
-      alert(err.response?.data?.message || "Request failed");
+      showError(err.response?.data?.message || "Request failed");
     }
   };
 

@@ -129,7 +129,7 @@ const AttendanceReports = () => {
               <tbody>
                 {records.map((record) => (
                   <tr key={record._id} className="border-b hover:bg-gray-50">
-                    <td className="py-3 px-4">{record.user?.name || 'Unknown'}</td>
+                    <td className="py-3 px-4">{record.user?.fullName || 'Unknown'}</td>
                     <td className="py-3 px-4">
                       {new Date(record.date).toLocaleDateString()}
                     </td>

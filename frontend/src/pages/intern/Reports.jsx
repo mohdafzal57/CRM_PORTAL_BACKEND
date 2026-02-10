@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import InternLayout from '../../components/InternLayout';
 import internApi from '../../services/internApi';
+import { useToast } from '../../context/ToastContext';
 
 const Card = ({ children, title, className = '' }) => (
     <div className={`bg-white rounded-xl shadow-sm border border-gray-100 p-6 ${className}`}>
@@ -15,6 +16,7 @@ export default function Reports() {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [newReport, setNewReport] = useState({ weekNumber: '', report: '' });
+    const { success: showSuccess, error: showError } = useToast();
 
     useEffect(() => {
         fetchProfile();
@@ -38,9 +40,9 @@ export default function Reports() {
             await internApi.submitReport(newReport);
             setNewReport({ weekNumber: '', report: '' });
             fetchProfile();
-            alert('Report submitted successfully');
+            showSuccess('Report submitted successfully');
         } catch (err) {
-            alert('Failed to submit report');
+            showError('Failed to submit report');
         } finally {
             setSubmitting(false);
         }
@@ -155,6 +157,7 @@ export default function Reports() {
                     </div>
                 </div>
             </div>
+
         </InternLayout>
     );
 }

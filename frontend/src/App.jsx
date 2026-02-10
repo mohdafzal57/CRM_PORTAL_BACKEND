@@ -17,6 +17,7 @@ import {
 
 // Intern Pages
 import InternDashboard from './pages/intern/Dashboard';
+import InternAttendance from './pages/intern/Attendance';
 import InternProfile from './pages/intern/Profile';
 import InternReports from './pages/intern/Reports';
 import InternTasks from './pages/intern/Tasks';
@@ -62,55 +63,67 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     return <Navigate to="/login" replace />;
   }
 
-  if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
-    const dashboards = {
-      'ADMIN': '/admin',
-      'HR': '/hr/dashboard',
-      'MANAGER': '/manager/dashboard',
-      'EMPLOYEE': '/employee/dashboard',
-      'INTERN': '/intern/dashboard'
-    };
-    return <Navigate to={dashboards[user.role] || '/login'} replace />;
+  if (allowedRoles.length > 0) {
+    const userRole = user.role?.toUpperCase();
+    if (!allowedRoles.includes(userRole)) {
+      const dashboards = {
+        'ADMIN': '/admin',
+        'HR': '/hr/dashboard',
+        'MANAGER': '/manager/dashboard',
+        'EMPLOYEE': '/employee/dashboard',
+        'INTERN': '/intern/dashboard'
+      };
+      return <Navigate to={dashboards[userRole] || '/login'} replace />;
+    }
   }
 
   return children;
 };
 
+// Toast Provider
+import { ToastProvider } from './context/ToastContext';
+import { NotificationProvider } from './context/NotificationContext';
+
 // ============ MAIN APP ============
 function App() {
   return (
-    <Router>
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+    <ToastProvider>
+      <NotificationProvider>
+        <Router>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
 
-        {/* Admin Routes */}
-        <Route path="/admin" element={<ProtectedRoute allowedRoles={['ADMIN']}><AdminDashboard /></ProtectedRoute>} />
-        <Route path="/admin/users" element={<ProtectedRoute allowedRoles={['ADMIN']}><UserManagement /></ProtectedRoute>} />
-        <Route path="/admin/attendance" element={<ProtectedRoute allowedRoles={['ADMIN']}><AttendancePage /></ProtectedRoute>} />
-        <Route path="/admin/geo-logs" element={<ProtectedRoute allowedRoles={['ADMIN']}><GeoLogsPage /></ProtectedRoute>} />
-        <Route path="/admin/reports" element={<ProtectedRoute allowedRoles={['ADMIN']}><ReportsPage /></ProtectedRoute>} />
-        <Route path="/admin/export" element={<ProtectedRoute allowedRoles={['ADMIN']}><ExportCenter/></ProtectedRoute>} />
-        <Route path="/admin/settings" element={<ProtectedRoute allowedRoles={['ADMIN']}><SettingsPage/></ProtectedRoute>} />
-        <Route path="/admin/dashboard" element={<Navigate to="/admin" replace />} />
+            {/* Admin Routes */}
+            <Route path="/admin" element={<ProtectedRoute allowedRoles={['ADMIN']}><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/admin/users" element={<ProtectedRoute allowedRoles={['ADMIN']}><UserManagement /></ProtectedRoute>} />
+            <Route path="/admin/attendance" element={<ProtectedRoute allowedRoles={['ADMIN']}><AttendancePage /></ProtectedRoute>} />
+            <Route path="/admin/geo-logs" element={<ProtectedRoute allowedRoles={['ADMIN']}><GeoLogsPage /></ProtectedRoute>} />
+            <Route path="/admin/reports" element={<ProtectedRoute allowedRoles={['ADMIN']}><ReportsPage /></ProtectedRoute>} />
+            <Route path="/admin/export" element={<ProtectedRoute allowedRoles={['ADMIN']}><ExportCenter /></ProtectedRoute>} />
+            <Route path="/admin/settings" element={<ProtectedRoute allowedRoles={['ADMIN']}><SettingsPage /></ProtectedRoute>} />
+            <Route path="/admin/dashboard" element={<Navigate to="/admin" replace />} />
 
-        {/* Other Role Dashboards */}
-        <Route path="/hr/dashboard" element={<ProtectedRoute allowedRoles={['HR']}><PlaceholderDashboard /></ProtectedRoute>} />
-        <Route path="/manager/dashboard" element={<ProtectedRoute allowedRoles={['MANAGER']}><PlaceholderDashboard /></ProtectedRoute>} />
-        <Route path="/employee/dashboard" element={<ProtectedRoute allowedRoles={['EMPLOYEE']}><PlaceholderDashboard /></ProtectedRoute>} />
+            {/* Other Role Dashboards */}
+            <Route path="/hr/dashboard" element={<ProtectedRoute allowedRoles={['HR']}><PlaceholderDashboard /></ProtectedRoute>} />
+            <Route path="/manager/dashboard" element={<ProtectedRoute allowedRoles={['MANAGER']}><PlaceholderDashboard /></ProtectedRoute>} />
+            <Route path="/employee/dashboard" element={<ProtectedRoute allowedRoles={['EMPLOYEE']}><PlaceholderDashboard /></ProtectedRoute>} />
 
-        {/* Intern Routes */}
-        <Route path="/intern/dashboard" element={<ProtectedRoute allowedRoles={['INTERN']}><InternDashboard /></ProtectedRoute>} />
-        <Route path="/intern/profile" element={<ProtectedRoute allowedRoles={['INTERN']}><InternProfile /></ProtectedRoute>} />
-        <Route path="/intern/tasks" element={<ProtectedRoute allowedRoles={['INTERN']}><InternTasks /></ProtectedRoute>} />
-        <Route path="/intern/reports" element={<ProtectedRoute allowedRoles={['INTERN']}><InternReports /></ProtectedRoute>} />
+            {/* Intern Routes */}
+            <Route path="/intern/dashboard" element={<ProtectedRoute allowedRoles={['INTERN']}><InternDashboard /></ProtectedRoute>} />
+            <Route path="/intern/attendance" element={<ProtectedRoute allowedRoles={['INTERN']}><InternAttendance /></ProtectedRoute>} />
+            <Route path="/intern/profile" element={<ProtectedRoute allowedRoles={['INTERN']}><InternProfile /></ProtectedRoute>} />
+            <Route path="/intern/tasks" element={<ProtectedRoute allowedRoles={['INTERN']}><InternTasks /></ProtectedRoute>} />
+            <Route path="/intern/reports" element={<ProtectedRoute allowedRoles={['INTERN']}><InternReports /></ProtectedRoute>} />
 
-        {/* Default */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
-    </Router>
+            {/* Default */}
+            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="*" element={<Navigate to="/login" replace />} />
+          </Routes>
+        </Router>
+      </NotificationProvider>
+    </ToastProvider>
   );
 }
 

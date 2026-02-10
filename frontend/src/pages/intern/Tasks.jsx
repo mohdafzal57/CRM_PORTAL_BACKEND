@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import InternLayout from '../../components/InternLayout';
 import internApi from '../../services/internApi';
+import { useToast } from '../../context/ToastContext';
 
 const Card = ({ children, className = '' }) => (
     <div className={`bg-white rounded-xl shadow-sm border border-gray-100 p-6 ${className}`}>
@@ -13,6 +14,7 @@ export default function Tasks() {
     const [tasks, setTasks] = useState([]);
     const [assignedTasks, setAssignedTasks] = useState([]);
     const [loading, setLoading] = useState(true);
+    const { success: showSuccess, error: showError } = useToast();
 
 
     useEffect(() => {
@@ -41,8 +43,12 @@ export default function Tasks() {
             setAssignedTasks(assignedTasks.map(t =>
                 t._id === taskId ? { ...t, status: newStatus } : t
             ));
+            setAssignedTasks(assignedTasks.map(t =>
+                t._id === taskId ? { ...t, status: newStatus } : t
+            ));
+            showSuccess('Task status updated successfully');
         } catch (err) {
-            alert('Failed to update status');
+            showError('Failed to update status');
         }
     };
 
@@ -138,6 +144,7 @@ export default function Tasks() {
                     </Card>
                 </div>
             </div>
+
         </InternLayout>
     );
 }

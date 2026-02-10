@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useToast } from '../../context/ToastContext';
 import AdminLayout from '../../components/AdminLayout';
 import {
   Card,
@@ -56,6 +57,7 @@ const INITIAL_INTERN_DATA = {
 };
 
 const UserManagement = () => {
+  const { success: showSuccess, error: showError, warning: showWarning } = useToast();
   // User Management State
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -112,7 +114,7 @@ const UserManagement = () => {
       const errorMsg = err.response?.data?.errors
         ? err.response.data.errors.join(', ')
         : err.response?.data?.message || 'Error saving user';
-      alert(errorMsg);
+      showError(errorMsg);
     } finally {
       setFormLoading(false);
     }
@@ -127,7 +129,7 @@ const UserManagement = () => {
       await api.toggleUserStatus(user._id);
       fetchUsers(pagination.current);
     } catch (err) {
-      alert('Error updating user status');
+      showError('Error updating user status');
     }
   };
 
@@ -141,7 +143,7 @@ const UserManagement = () => {
       await api.deleteUser(user._id);
       fetchUsers(pagination.current);
     } catch (err) {
-      alert(err.response?.data?.message || 'Error deleting user');
+      showError(err.response?.data?.message || 'Error deleting user');
     } finally {
       setLoading(false);
     }
@@ -202,9 +204,9 @@ const UserManagement = () => {
     } catch (err) {
       console.error('Error fetching intern details:', err);
       if (err.response) {
-        alert(`Error: ${err.response.data.message || 'Failed to fetch intern details'}`);
+        showError(`Error: ${err.response.data.message || 'Failed to fetch intern details'}`);
       } else {
-        alert('Error fetching intern details (Network or Server Error)');
+        showError('Error fetching intern details (Network or Server Error)');
       }
       setInternModalOpen(false);
     } finally {
@@ -217,10 +219,10 @@ const UserManagement = () => {
     setInternSaving(true);
     try {
       await api.updateInternDetailsByAdmin(selectedIntern.userId._id, internData);
-      alert('Intern details updated successfully');
+      showSuccess('Intern details updated successfully');
       setInternModalOpen(false);
     } catch (err) {
-      alert('Error updating intern details');
+      showError('Error updating intern details');
     } finally {
       setInternSaving(false);
     }
@@ -244,7 +246,7 @@ const UserManagement = () => {
       }));
     } catch (err) {
       console.error(err);
-      alert('Failed to fetch intern details');
+      showError('Failed to fetch intern details');
       setTaskAssignmentModalOpen(false);
     } finally {
       setInternLoading(false);
@@ -254,12 +256,12 @@ const UserManagement = () => {
   const handleAssignTask = async (e) => {
     e.preventDefault();
     if (!newTask.title) {
-      alert('Task title is required');
+      showWarning('Task title is required');
       return;
     }
     try {
       await api.assignTaskToIntern(selectedIntern.userId._id, newTask);
-      alert('Task assigned successfully');
+      showSuccess('Task assigned successfully');
       setNewTask({ title: '', description: '', dueDate: '' });
 
       // Refresh data
@@ -274,7 +276,7 @@ const UserManagement = () => {
       }));
     } catch (err) {
       console.error(err);
-      alert('Failed to assign task');
+      showError('Failed to assign task');
     }
   };
 
@@ -422,11 +424,10 @@ const UserManagement = () => {
                           )}
                           <button
                             onClick={() => toggleStatus(user)}
-                            className={`p-2 rounded-lg ${
-                              user.isActive
-                                ? 'hover:bg-red-50 text-red-600'
-                                : 'hover:bg-green-50 text-green-600'
-                            }`}
+                            className={`p-2 rounded-lg ${user.isActive
+                              ? 'hover:bg-red-50 text-red-600'
+                              : 'hover:bg-green-50 text-green-600'
+                              }`}
                             title={user.isActive ? 'Disable' : 'Enable'}
                           >
                             {user.isActive ? '🚫' : '✅'}
@@ -812,11 +813,10 @@ const UserManagement = () => {
                           {new Date(update.date).toLocaleDateString()}
                         </span>
                         <span
-                          className={`text-xs px-2 py-0.5 rounded ${
-                            update.status === 'Completed'
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-yellow-100 text-yellow-700'
-                          }`}
+                          className={`text-xs px-2 py-0.5 rounded ${update.status === 'Completed'
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-yellow-100 text-yellow-700'
+                            }`}
                         >
                           {update.status}
                         </span>

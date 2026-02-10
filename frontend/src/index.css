@@ -1,156 +1,129 @@
-/* Import Tailwind CSS v4 */
 @import "tailwindcss";
 
-/* ===== CUSTOM THEME CONFIGURATION ===== */
 @theme {
-  /* Primary Colors - Light Blue Theme */
-  --color-primary-50: #eff6ff;
-  --color-primary-100: #dbeafe;
-  --color-primary-200: #bfdbfe;
-  --color-primary-300: #93c5fd;
-  --color-primary-400: #60a5fa;
-  --color-primary-500: #3b82f6;
-  --color-primary-600: #2563eb;
-  --color-primary-700: #1d4ed8;
-  --color-primary-800: #1e40af;
-  --color-primary-900: #1e3a8a;
+  --font-sans: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
 
-  /* Custom Fonts */
-  --font-sans: 'Inter', system-ui, sans-serif;
-
-  /* Custom Shadows */
-  --shadow-soft: 0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04);
-  --shadow-card: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.05), 0 12px 24px rgba(0, 0, 0, 0.05);
-
-  /* Custom Animations */
-  --animate-fade-in: fade-in 0.5s ease-out;
-  --animate-slide-up: slide-up 0.5s ease-out;
-
-  @keyframes fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-
-  @keyframes slide-up {
-    from { 
-      transform: translateY(20px); 
-      opacity: 0; 
-    }
-    to { 
-      transform: translateY(0); 
-      opacity: 1; 
-    }
-  }
+  /* Zoho Colors */
+  --color-zoho-blue: #1c3e6e;
+  --color-zoho-light: #f4f7fa;
+  --color-zoho-accent: #2c7be5;
+  --color-zoho-purple-50: #f5f3ff;
+  --color-zoho-purple-100: #ede9fe;
+  --color-zoho-purple-200: #ddd6fe;
+  --color-zoho-purple-300: #c4b5fd;
+  --color-zoho-purple-400: #a78bfa;
+  --color-zoho-purple-500: #8b5cf6;
+  --color-zoho-purple-600: #7c3aed;
+  --color-zoho-purple-700: #6d28d9;
 }
 
-/* ===== BASE STYLES ===== */
-* {
-  box-sizing: border-box;
+:root {
+  line-height: 1.6;
+
+  /* Default Purple Pattern */
+  --bg-strip-1: #F5F3FF;
+  --bg-strip-2: #EDE9FE;
+  --bg-strip-3: #DDD6FE;
+  --bg-strip-4: #C4B5FD;
+  --bg-strip-5: #A78BFA;
+  --bg-strip-6: #8B5CF6;
+  --bg-main: #ffffff;
 }
 
-html {
-  scroll-behavior: smooth;
+[data-theme='dark'] {
+  --bg-strip-1: #020617;
+  --bg-strip-2: #0f172a;
+  --bg-strip-3: #1e293b;
+  --bg-strip-4: #334155;
+  --bg-strip-5: #475569;
+  --bg-strip-6: #111827;
+  --bg-main: #020617;
 }
 
 body {
-  @apply bg-gray-50 text-gray-900 font-sans antialiased;
+  margin: 0;
+  min-width: 320px;
   min-height: 100vh;
+  @apply text-slate-700 antialiased selection:bg-indigo-100;
+  background-color: var(--bg-main);
 }
 
-/* Custom Scrollbar */
+/* Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-gray-100;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-300 rounded-full;
+  @apply bg-slate-400/20 rounded-full hover:bg-slate-400/40;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-400;
+/* Background Pattern */
+.zoho-bg-pattern {
+  background-color: var(--bg-main, #ffffff);
+  background-image: linear-gradient(90deg,
+      var(--bg-strip-1) 0%,
+      var(--bg-strip-1) 16.66%,
+      var(--bg-strip-2) 16.66%,
+      var(--bg-strip-2) 33.33%,
+      var(--bg-strip-3) 33.33%,
+      var(--bg-strip-3) 50%,
+      var(--bg-strip-4) 50%,
+      var(--bg-strip-4) 66.66%,
+      var(--bg-strip-5) 66.66%,
+      var(--bg-strip-5) 83.33%,
+      var(--bg-strip-6) 83.33%,
+      var(--bg-strip-6) 100%);
+  background-size: 100% 100%;
+  background-origin: border-box;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
-/* ===== UTILITY CLASSES ===== */
-.gradient-bg {
-  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 50%, #bfdbfe 100%);
+/* Glass Layer */
+.glass-layer {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  @apply rounded-[2rem] transition-all duration-500 ease-in-out;
 }
 
-.text-gradient {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-primary-800;
+.card-glass {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 1);
+  box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.05);
+  @apply rounded-3xl transition-all duration-500;
 }
 
-/* ===== COMPONENT CLASSES ===== */
+.card-glass:hover {
+  @apply -translate-y-1 shadow-xl bg-white/90 border-indigo-100;
+}
+
+/* Buttons */
+.btn-base {
+  @apply px-6 py-3 rounded-2xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 active:scale-95 cursor-pointer;
+}
+
 .btn-primary {
-  @apply bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold
-         hover:bg-primary-700 focus:outline-none focus:ring-4 focus:ring-primary-300
-         transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed
-         shadow-lg cursor-pointer;
-  box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.3);
-}
-
-.btn-primary:hover {
-  box-shadow: 0 6px 20px 0 rgba(37, 99, 235, 0.4);
+  @apply px-6 py-3 rounded-2xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 active:scale-95 cursor-pointer bg-indigo-600 text-white shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 hover:shadow-indigo-600/30;
 }
 
 .btn-secondary {
-  @apply bg-white text-gray-700 px-6 py-3 rounded-lg font-semibold
-         border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-4 
-         focus:ring-gray-200 transition-all duration-200 cursor-pointer;
+  @apply px-6 py-3 rounded-2xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 active:scale-95 cursor-pointer bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 hover:border-indigo-400 hover:text-indigo-600;
 }
 
+/* Inputs */
 .input-field {
-  @apply w-full px-4 py-3 bg-white border border-gray-300 rounded-lg
-         text-gray-900 placeholder-gray-400
-         focus:outline-none focus:ring-4 focus:ring-primary-100 focus:border-primary-500
-         transition-all duration-200;
+  @apply w-full px-5 py-3.5 bg-white border-2 border-slate-100 rounded-[1.25rem] text-sm font-medium placeholder-slate-400 transition-all duration-300 focus:outline-none focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 shadow-sm;
 }
 
-.input-error {
-  @apply border-red-500 focus:ring-red-100 focus:border-red-500;
-}
-
-.card {
-  @apply bg-white rounded-2xl p-8;
-  box-shadow: var(--shadow-card);
-}
-
-.label {
-  @apply block text-sm font-medium text-gray-700 mb-2;
-}
-
-.error-text {
-  @apply text-red-500 text-sm mt-1;
-}
-
-.success-text {
-  @apply text-green-600 text-sm mt-1;
-}
-
-/* ===== LOADING SPINNER ===== */
-.spinner {
-  border: 3px solid #f3f4f6;
-  border-top: 3px solid #3b82f6;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* ===== ANIMATION CLASSES ===== */
-.animate-fade-in {
-  animation: fade-in 0.5s ease-out;
-}
-
-.animate-slide-up {
-  animation: slide-up 0.5s ease-out;
+.label-text {
+  @apply block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2;
 }

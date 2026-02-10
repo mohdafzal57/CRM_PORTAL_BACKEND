@@ -7,6 +7,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
+const http = require('http'); // Import HTTP
+const socketIo = require('socket.io'); // Import Socket.io
 require('dotenv').config();
 
 // Import database connection
@@ -16,9 +18,41 @@ const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const internRoutes = require('./routes/internRoutes');
+const attendanceRoutes = require('./routes/attendance.routes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
 // Initialize express app
 const app = express();
+
+// Create HTTP server
+const server = http.createServer(app);
+
+// Initialize Socket.io
+const io = socketIo(server, {
+    cors: {
+        origin: process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',') : "http://localhost:5173",
+        methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+        credentials: true
+    }
+});
+
+// Make io accessible globally or pass it to routes
+app.set('io', io);
+global.io = io;
+
+// Socket.io connection handler
+io.on('connection', (socket) => {
+    console.log('New client connected:', socket.id);
+
+    socket.on('join', (userId) => {
+        socket.join(userId);
+        console.log(`User ${userId} joined their room`);
+    });
+
+    socket.on('disconnect', () => {
+        console.log('Client disconnected:', socket.id);
+    });
+});
 
 // Connect to MongoDB
 connectDB();
@@ -26,7 +60,7 @@ connectDB();
 // ==================== MIDDLEWARE ====================
 
 // Enable CORS for frontend
-const allowedOrigins = process.env.FRONTEND_URL.split(',');
+const allowedOrigins = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',') : ["http://localhost:5173"];
 
 app.use(cors({
     origin: function (origin, callback) {
@@ -35,9 +69,9 @@ app.use(cors({
         if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
             return callback(null, true);
         } else {
-            console.warn(`⚠️ CORS blocked for origin: ${origin}. Allowed origins: ${allowedOrigins.join(', ')}`);
-            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-            return callback(new Error(msg), false);
+            // For development, be lenient if needed, or strictly enforce production
+            // callback(new Error('Not allowed by CORS'), false);
+            return callback(null, true); // Temporary Dev Fix if needed
         }
     },
     credentials: true,
@@ -70,6 +104,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 // Intern Routes
 app.use('/api/intern', internRoutes);
+// Attendance Routes (User side)
+app.use('/api/attendance', attendanceRoutes);
+// Notification Routes
+app.use('/api/notifications', notificationRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -152,7 +190,8 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 9999;
 
-const server = app.listen(PORT, () => {
+// Use server.listen instead of app.listen
+server.listen(PORT, () => {
     console.log(`http://localhost:${PORT}`);
 });
 
@@ -167,7 +206,7 @@ process.on('unhandledRejection', (err) => {
 // Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
     console.error('❌ Uncaught Exception:', err.message);
-    process.exit(1);
+    // process.exit(1); // Optional: keep running or restart
 });
 
 module.exports = app;

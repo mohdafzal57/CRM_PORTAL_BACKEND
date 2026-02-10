@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { MapPin, Loader2 } from 'lucide-react';
+import { useToast } from '../../context/ToastContext';
 import AdminLayout from '../../components/AdminLayout';
 import { Card, Button, Input, Select, Loading } from '../../components/admin/ui';
 import * as api from '../../services/adminApi';
@@ -12,9 +14,11 @@ const TIMEZONE_OPTIONS = [
 ];
 
 const SettingsPage = () => {
+  const { success: showSuccess, error: showError } = useToast();
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isFetchingLocation, setIsFetchingLocation] = useState(false);
 
   useEffect(() => {
     fetchSettings();
@@ -36,12 +40,41 @@ const SettingsPage = () => {
     setSaving(true);
     try {
       await api.updateSettings(settings);
-      alert('Settings saved successfully!');
+      showSuccess('Settings saved successfully!');
     } catch (err) {
-      alert('Failed to save settings');
+      showError('Failed to save settings');
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      showError('Geolocation is not supported by your browser');
+      return;
+    }
+
+    setIsFetchingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setSettings((prev) => ({
+          ...prev,
+          officeLocation: {
+            ...prev.officeLocation,
+            latitude,
+            longitude
+          }
+        }));
+        showSuccess('Location fetched successfully');
+        setIsFetchingLocation(false);
+      },
+      (error) => {
+        console.error('Error getting location:', error);
+        showError('Unable to retrieve your location');
+        setIsFetchingLocation(false);
+      }
+    );
   };
 
   // Helper function to update nested settings
@@ -85,7 +118,18 @@ const SettingsPage = () => {
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Office Location */}
         <Card>
-          <h2 className="text-lg font-semibold mb-6">📍 Office Location</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-semibold">📍 Office Location</h2>
+            <Button
+              variant="secondary"
+              onClick={handleGetLocation}
+              loading={isFetchingLocation}
+              className="text-xs py-1.5 h-8 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border-indigo-100"
+            >
+              {!isFetchingLocation && <MapPin className="w-3.5 h-3.5 mr-1.5" />}
+              Auto-Detect
+            </Button>
+          </div>
           <Input
             label="Address"
             value={settings?.officeLocation?.address || ''}

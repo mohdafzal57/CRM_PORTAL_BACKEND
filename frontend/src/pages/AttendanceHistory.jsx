@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { useToast } from "../context/ToastContext";
 import { getMyAttendanceHistory } from "../services/attendance.service";
 
 const AttendanceHistory = () => {
+  const { error: showError } = useToast();
   const [records, setRecords] = useState([]);
   const [page, setPage] = useState(1);
 
@@ -14,7 +16,7 @@ const AttendanceHistory = () => {
       const res = await getMyAttendanceHistory(page);
       setRecords(res.data.data);
     } catch (err) {
-      alert("Failed to load attendance history");
+      showError("Failed to load attendance history");
     }
   };
 

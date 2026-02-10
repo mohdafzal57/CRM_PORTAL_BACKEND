@@ -7,6 +7,7 @@ const Company = require('../models/Company'); // Existing model
 const Attendance = require('../models/Attendance'); // New model
 const WorkReport = require('../models/WorkReport'); // New model
 const { generateExcel, generatePDF } = require('../utils/exportUtils');
+const { createNotification } = require('./notificationController');
 
 // ==================== DASHBOARD ====================
 
@@ -490,6 +491,15 @@ exports.createManualAttendance = async (req, res) => {
 
     await attendance.save();
 
+    // Notify user about manual attendance entry
+    await createNotification(
+      userId,
+      `Manual attendance added for ${attendanceDate.toLocaleDateString()}`,
+      'success',
+      attendance._id,
+      'Attendance'
+    );
+
     res.status(201).json({ success: true, message: 'Attendance recorded successfully', data: attendance });
   } catch (error) {
     console.error('Manual attendance error:', error);
@@ -557,6 +567,15 @@ exports.reviewWorkReport = async (req, res) => {
     if (!report) {
       return res.status(404).json({ success: false, message: 'Report not found' });
     }
+
+    // Notify user about report review
+    await createNotification(
+      report.user._id, // Populated in findOneAndUpdate
+      `Your work report ${report.date ? new Date(report.date).toLocaleDateString() : ''} has been reviewed: ${status}`,
+      status === 'APPROVED' ? 'success' : 'warning',
+      report._id,
+      'Report'
+    );
 
     res.json({ success: true, message: 'Report reviewed successfully', data: report });
   } catch (error) {
@@ -847,6 +866,15 @@ exports.assignTaskToIntern = async (req, res) => {
 
     user.internDetails.assignedTasks.push(newTask);
     await user.save();
+
+    // Notify the intern
+    await createNotification(
+      user._id,
+      `New Task Assigned: ${title}`,
+      'info',
+      null, // No direct ID model for embedded task, or we could use the new task ID if we fetched it
+      'Task'
+    );
 
     res.status(201).json({
       success: true,
