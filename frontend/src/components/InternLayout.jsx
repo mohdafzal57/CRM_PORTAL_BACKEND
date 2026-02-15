@@ -1,21 +1,17 @@
-import React, { useState } from 'react';
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import {
-    LayoutDashboard,
-    User,
-    Calendar,
-    FileText,
-    Clock,
-    Settings,
-    Bell,
-    ChevronDown,
-    Menu,
-    LogOut,
-    ChevronRight,
     ArrowLeft,
+    BarChart3,
     CheckSquare,
-    BarChart3
+    ChevronDown,
+    ChevronRight,
+    Clock,
+    LayoutDashboard,
+    LogOut,
+    Menu,
+    User
 } from 'lucide-react';
+import React, { useState } from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
 import NotificationDropdown from './ui/NotificationDropdown';
 
 const InternLayout = ({ children }) => {
@@ -25,13 +21,13 @@ const InternLayout = ({ children }) => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
 
     const navigation = [
-        { name: 'Overview', path: '/intern/dashboard', icon: LayoutDashboard },
-        { name: 'Attendance', path: '/intern/attendance', icon: Clock },
-        { name: 'My Profile', path: '/intern/profile', icon: User },
-        { name: 'Daily Tasks', path: '/intern/tasks', icon: CheckSquare },
-        { name: 'Progress Reports', path: '/intern/reports', icon: BarChart3 },
-    ];
-
+        { name: 'Overview', path: '/employee/dashboard', icon: LayoutDashboard },
+        { name: 'Attendance', path: '/employee/attendance', icon: Clock },
+        { name: 'My Profile', path: '/employee/profile', icon: User },
+        { name: 'Daily Tasks', path: '/employee/tasks', icon: CheckSquare },
+        { name: 'Progress Reports', path: '/employee/reports', icon: BarChart3 },
+      ];
+      
     const handleLogout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
@@ -175,7 +171,8 @@ const InternLayout = ({ children }) => {
                                         <div className="px-2 space-y-1">
                                             <button
                                                 onClick={() => {
-                                                    navigate('/intern/profile');
+                                                    navigate('/employee/profile');
+
                                                     setIsProfileOpen(false);
                                                 }}
                                                 className="w-full flex items-center justify-between px-5 py-3.5 text-sm font-bold text-slate-600 hover:bg-indigo-50 hover:text-indigo-700 rounded-2xl transition-all group/item"

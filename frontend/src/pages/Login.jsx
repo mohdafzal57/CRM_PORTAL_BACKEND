@@ -1,18 +1,18 @@
 // Modern Login Page
-import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { adminLogin, employeeLogin, saveAuthData, isAuthenticated } from '../services/api';
 import {
-  Shield,
-  User,
-  Mail,
-  Lock,
-  Eye,
-  EyeOff,
+  AlertCircle,
   ArrowRight,
   CheckCircle2,
-  AlertCircle
+  Eye,
+  EyeOff,
+  Lock,
+  Mail,
+  Shield,
+  User
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { adminLogin, employeeLogin, isAuthenticated, saveAuthData } from '../services/api';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -28,6 +28,8 @@ const Login = () => {
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       if (user && user.role) {
         if (user.role === 'ADMIN') navigate('/admin/dashboard');
+        else if (user.role === 'EMPLOYEE') navigate('/employee/dashboard');
+
         else navigate(`/${user.role.toLowerCase()}/dashboard`);
       } else {
         localStorage.removeItem('token');
@@ -35,6 +37,7 @@ const Login = () => {
       }
     }
   }, [navigate]);
+  
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -55,27 +58,38 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
-
+  
     setLoading(true);
     setApiError('');
-
+  
     try {
       const loginFn = loginType === 'admin' ? adminLogin : employeeLogin;
       const response = await loginFn({
         email: formData.email.toLowerCase().trim(),
         password: formData.password,
       });
-
+  
       if (response.success) {
         saveAuthData(response.data.token, response.data.user);
-        navigate(response.data.redirectTo || '/admin/dashboard');
+  
+        const role = response.data.user.role;
+  
+        if (role === "EMPLOYEE") {
+          navigate("/employee/dashboard");
+        } else if (role === "ADMIN") {
+          navigate("/admin/dashboard");
+        } else {
+          navigate(`/${role.toLowerCase()}/dashboard`);
+        }
       }
+  
     } catch (error) {
       setApiError(error.message || 'Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
     }
   };
+  
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-slate-50 flex items-center justify-center p-4">

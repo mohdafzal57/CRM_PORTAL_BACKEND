@@ -2,22 +2,34 @@
 import React from 'react';
 import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 
+
 // Import your existing pages
+import Attendance from "./pages/employee/Attendance";
+import EmployeeDashboard from "./pages/employee/Dashboard";
+import EmployeeProfile from "./pages/employee/Profile";
+import EmployeeReports from "./pages/employee/Reports";
+import EmployeeTasks from "./pages/employee/Tasks";
+
+
+
+
+
+
 import Login from './pages/Login';
 import Register from './pages/Register';
 import {
   Dashboard as AdminDashboard,
   AttendanceReports as AttendancePage,
+  ExportCenter,
   GeoLocationLogs as GeoLogsPage,
   WorkReports as ReportsPage,
-  UserManagement,
-  ExportCenter,
-  SettingsPage
+  SettingsPage,
+  UserManagement
 } from './pages/admin';
 
 // Intern Pages
-import InternDashboard from './pages/intern/Dashboard';
 import InternAttendance from './pages/intern/Attendance';
+import InternDashboard from './pages/intern/Dashboard';
 import InternProfile from './pages/intern/Profile';
 import InternReports from './pages/intern/Reports';
 import InternTasks from './pages/intern/Tasks';
@@ -71,6 +83,9 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
         'HR': '/hr/dashboard',
         'MANAGER': '/manager/dashboard',
         'EMPLOYEE': '/employee/dashboard',
+
+        
+
         'INTERN': '/intern/dashboard'
       };
       return <Navigate to={dashboards[userRole] || '/login'} replace />;
@@ -81,8 +96,8 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
 };
 
 // Toast Provider
-import { ToastProvider } from './context/ToastContext';
 import { NotificationProvider } from './context/NotificationContext';
+import { ToastProvider } from './context/ToastContext';
 
 // ============ MAIN APP ============
 function App() {
@@ -108,14 +123,65 @@ function App() {
             {/* Other Role Dashboards */}
             <Route path="/hr/dashboard" element={<ProtectedRoute allowedRoles={['HR']}><PlaceholderDashboard /></ProtectedRoute>} />
             <Route path="/manager/dashboard" element={<ProtectedRoute allowedRoles={['MANAGER']}><PlaceholderDashboard /></ProtectedRoute>} />
-            <Route path="/employee/dashboard" element={<ProtectedRoute allowedRoles={['EMPLOYEE']}><PlaceholderDashboard /></ProtectedRoute>} />
-
+            
             {/* Intern Routes */}
             <Route path="/intern/dashboard" element={<ProtectedRoute allowedRoles={['INTERN']}><InternDashboard /></ProtectedRoute>} />
             <Route path="/intern/attendance" element={<ProtectedRoute allowedRoles={['INTERN']}><InternAttendance /></ProtectedRoute>} />
             <Route path="/intern/profile" element={<ProtectedRoute allowedRoles={['INTERN']}><InternProfile /></ProtectedRoute>} />
             <Route path="/intern/tasks" element={<ProtectedRoute allowedRoles={['INTERN']}><InternTasks /></ProtectedRoute>} />
             <Route path="/intern/reports" element={<ProtectedRoute allowedRoles={['INTERN']}><InternReports /></ProtectedRoute>} />
+
+
+           
+
+
+{/* Employee Routes */}
+<Route
+  path="/employee/dashboard"
+  element={
+    <ProtectedRoute allowedRoles={['EMPLOYEE']}>
+      <EmployeeDashboard />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/employee/attendance"
+  element={
+    <ProtectedRoute allowedRoles={['EMPLOYEE']}>
+      <Attendance />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/employee/profile"
+  element={
+    <ProtectedRoute allowedRoles={['EMPLOYEE']}>
+      <EmployeeProfile />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/employee/tasks"
+  element={
+    <ProtectedRoute allowedRoles={['EMPLOYEE']}>
+      <EmployeeTasks />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/employee/reports"
+  element={
+    <ProtectedRoute allowedRoles={['EMPLOYEE']}>
+      <EmployeeReports />
+    </ProtectedRoute>
+  }
+/>
+
+
 
             {/* Default */}
             <Route path="/" element={<Navigate to="/login" replace />} />
