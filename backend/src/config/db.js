@@ -8,7 +8,7 @@ const mongoose = require('mongoose');
 const connectDB = async () => {
     try {
         // Connect to MongoDB with recommended options
-        const conn = await mongoose.connect(process.env.MONGODB_URI, {
+        const conn = await mongoose.connect(process.env.MONGO_URI, {
             // These options ensure stable connection
             maxPoolSize: 10,
             serverSelectionTimeoutMS: 5000,
