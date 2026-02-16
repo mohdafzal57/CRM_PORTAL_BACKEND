@@ -15,12 +15,18 @@ require('dotenv').config();
 const connectDB = require('./config/db');
 
 // Import routes
+<<<<<<< HEAD
 const hrRoutes = require('./routes/hrRoutes');
+=======
+const userRoutes = require('./routes/userRoutes');
+>>>>>>> 6bac948 (Employee Panel PRO UI + Dashboard + Profile + Tasks + Reports + Leave + Notification)
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const internRoutes = require('./routes/internRoutes');
 const attendanceRoutes = require('./routes/attendance.routes');
 const notificationRoutes = require('./routes/notificationRoutes');
+
+
 
 // Initialize express app
 const app = express();
@@ -109,8 +115,15 @@ app.use('/api/intern', internRoutes);
 app.use('/api/attendance', attendanceRoutes);
 // Notification Routes
 app.use('/api/notifications', notificationRoutes);
+<<<<<<< HEAD
 // HR Routes
 app.use('/api/hr', hrRoutes);
+=======
+app.use('/api/users', userRoutes);
+
+
+
+>>>>>>> 6bac948 (Employee Panel PRO UI + Dashboard + Profile + Tasks + Reports + Leave + Notification)
 
 // Root endpoint
 app.get('/', (req, res) => {
