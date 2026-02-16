@@ -15,6 +15,7 @@ require('dotenv').config();
 const connectDB = require('./config/db');
 
 // Import routes
+const hrRoutes = require('./routes/hrRoutes');
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const internRoutes = require('./routes/internRoutes');
@@ -108,6 +109,8 @@ app.use('/api/intern', internRoutes);
 app.use('/api/attendance', attendanceRoutes);
 // Notification Routes
 app.use('/api/notifications', notificationRoutes);
+// HR Routes
+app.use('/api/hr', hrRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
