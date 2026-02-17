@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
+const { writeLimiter } = require('../utils/rateLimiter');
 
 const {
     getMyNotifications,
@@ -11,7 +12,7 @@ const {
 router.use(protect); // All routes require authentication
 
 router.get('/', getMyNotifications);
-router.put('/:id/read', markAsRead);
-router.put('/mark-all-read', markAllAsRead);
+router.put('/:id/read', writeLimiter, markAsRead);
+router.put('/mark-all-read', writeLimiter, markAllAsRead);
 
 module.exports = router;

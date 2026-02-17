@@ -1,6 +1,7 @@
 const WorkReport = require('../models/WorkReport');
 const User = require('../models/User');
 const mongoose = require('mongoose');
+const { escapeRegex } = require('../utils/securityUtils');
 
 // @desc    Get all work reports
 // @route   GET /api/admin/reports
@@ -33,10 +34,12 @@ exports.getWorkReports = async (req, res) => {
     }
 
     if (search) {
+      // SECURITY FIX: Escape user input before using in regex to prevent NoSQL injection
+      const escapedSearch = escapeRegex(search);
       const users = await User.find({
         $or: [
-          { fullName: { $regex: search, $options: 'i' } },
-          { email: { $regex: search, $options: 'i' } }
+          { fullName: { $regex: escapedSearch, $options: 'i' } },
+          { email: { $regex: escapedSearch, $options: 'i' } }
         ]
       }).select('_id');
       query.user = { $in: users.map(u => u._id) };

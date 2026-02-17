@@ -2,6 +2,7 @@ const User = require('../models/User');
 const Attendance = require('../models/Attendance');
 const Leave = require('../models/Leave');
 const mongoose = require('mongoose');
+const { escapeRegex } = require('../utils/securityUtils');
 
 // Try to import InternProfile, but don't fail if it doesn't exist
 let InternProfile;
@@ -242,10 +243,12 @@ exports.getAttendanceRecords = async (req, res) => {
 
     // Search filter
     if (search) {
+      // SECURITY FIX: Escape user input before using in regex to prevent NoSQL injection
+      const escapedSearch = escapeRegex(search);
       const users = await User.find({
         $or: [
-          { fullName: { $regex: search, $options: 'i' } },
-          { email: { $regex: search, $options: 'i' } }
+          { fullName: { $regex: escapedSearch, $options: 'i' } },
+          { email: { $regex: escapedSearch, $options: 'i' } }
         ]
       }).select('_id');
       query.user = { $in: users.map(u => u._id) };
@@ -327,10 +330,12 @@ exports.getEmployees = async (req, res) => {
 
     // Search filter
     if (search) {
+      // SECURITY FIX: Escape user input before using in regex to prevent NoSQL injection
+      const escapedSearch = escapeRegex(search);
       query.$or = [
-        { fullName: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } },
-        { mobile: { $regex: search, $options: 'i' } }
+        { fullName: { $regex: escapedSearch, $options: 'i' } },
+        { email: { $regex: escapedSearch, $options: 'i' } },
+        { mobile: { $regex: escapedSearch, $options: 'i' } }
       ];
     }
 
@@ -424,8 +429,10 @@ exports.getLeaveRequests = async (req, res) => {
     if (type) query.type = type;
 
     if (search) {
+      // SECURITY FIX: Escape user input before using in regex to prevent NoSQL injection
+      const escapedSearch = escapeRegex(search);
       const users = await User.find({
-        fullName: { $regex: search, $options: 'i' }
+        fullName: { $regex: escapedSearch, $options: 'i' }
       }).select('_id');
       query.user = { $in: users.map(u => u._id) };
     }
@@ -555,9 +562,11 @@ exports.getInterns = async (req, res) => {
     // Fallback: Use User model directly
     const query = { role: 'INTERN' };
     if (search) {
+      // SECURITY FIX: Escape user input before using in regex to prevent NoSQL injection
+      const escapedSearch = escapeRegex(search);
       query.$or = [
-        { fullName: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } }
+        { fullName: { $regex: escapedSearch, $options: 'i' } },
+        { email: { $regex: escapedSearch, $options: 'i' } }
       ];
     }
 

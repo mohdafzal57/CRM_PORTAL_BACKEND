@@ -2,10 +2,11 @@ const express = require("express");
 const router = express.Router();
 
 const { protect } = require("../middleware/authMiddleware");
+const { writeLimiter } = require("../utils/rateLimiter");
 const User = require("../models/User");
 
 // ================= UPDATE MY PROFILE =================
-router.put("/update-me", protect, async (req, res) => {
+router.put("/update-me", protect, writeLimiter, async (req, res) => {
   try {
     const { name, email } = req.body;
 

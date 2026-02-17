@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const hr = require('../controllers/hrController');
 const { protect, authorize } = require('../middleware/authMiddleware');
+const { writeLimiter, searchLimiter, reportLimiter } = require('../utils/rateLimiter');
 
 router.use(protect);
 router.use(authorize('HR', 'ADMIN'));
@@ -12,30 +13,30 @@ router.get('/dashboard/activity', hr.getRecentActivity);
 
 // Attendance
 router.get('/attendance/employees', hr.getEmployeesForAttendance);
-router.post('/attendance/save', hr.saveAttendance);
-router.get('/attendance', hr.getAttendanceRecords);
-router.put('/attendance/:id', hr.updateAttendanceRecord);
+router.post('/attendance/save', writeLimiter, hr.saveAttendance);
+router.get('/attendance', searchLimiter, hr.getAttendanceRecords);
+router.put('/attendance/:id', writeLimiter, hr.updateAttendanceRecord);
 
 // Employees
-router.get('/employees', hr.getEmployees);
+router.get('/employees', searchLimiter, hr.getEmployees);
 router.get('/employees/:id', hr.getEmployeeDetails);
 
 // Leaves
-router.get('/leaves', hr.getLeaveRequests);
-router.put('/leaves/:id/review', hr.reviewLeave);
+router.get('/leaves', searchLimiter, hr.getLeaveRequests);
+router.put('/leaves/:id/review', writeLimiter, hr.reviewLeave);
 
 // Interns
-router.get('/interns', hr.getInterns);
+router.get('/interns', searchLimiter, hr.getInterns);
 router.get('/interns/:userId', hr.getInternDetails);
-router.post('/interns/:userId/assign-task', hr.assignTask);
+router.post('/interns/:userId/assign-task', writeLimiter, hr.assignTask);
 
 // Reports
-router.get('/reports/:type', hr.getReport);
-router.post('/reports/:type/export', hr.exportReport);
+router.get('/reports/:type', reportLimiter, hr.getReport);
+router.post('/reports/:type/export', reportLimiter, hr.exportReport);
 
 // Profile
 router.get('/profile', hr.getMyProfile);
-router.put('/profile', hr.updateMyProfile);
-router.put('/profile/password', hr.changePassword);
+router.put('/profile', writeLimiter, hr.updateMyProfile);
+router.put('/profile/password', writeLimiter, hr.changePassword);
 
 module.exports = router;

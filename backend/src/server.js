@@ -11,15 +11,16 @@ const http = require('http'); // Import HTTP
 const socketIo = require('socket.io'); // Import Socket.io
 require('dotenv').config();
 
-// Import database connection
-const connectDB = require('./config/db');
+// Import database connection and optimization
+const { connect: connectDB, disconnect: disconnectDB, getStats: getDBStats, isHealthy: isDBHealthy } = require('./config/db');
+const { getMetrics: getQueryMetrics, resetMetrics: resetQueryMetrics } = require('./utils/dbOptimization');
+
+// Import rate limiting
+const { globalLimiter, applyRoleBasedLimiter } = require('./utils/rateLimiter');
 
 // Import routes
-<<<<<<< HEAD
 const hrRoutes = require('./routes/hrRoutes');
-=======
 const userRoutes = require('./routes/userRoutes');
->>>>>>> 6bac948 (Employee Panel PRO UI + Dashboard + Profile + Tasks + Reports + Leave + Notification)
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const internRoutes = require('./routes/internRoutes');
@@ -105,6 +106,10 @@ if (process.env.NODE_ENV === 'development') {
 
 // ==================== ROUTES ====================
 
+// Apply global rate limiting to all API routes
+app.use('/api', globalLimiter);
+app.use('/api', applyRoleBasedLimiter);
+
 // API Routes
 app.use('/api/auth', authRoutes);
 // Admin Routes
@@ -115,15 +120,10 @@ app.use('/api/intern', internRoutes);
 app.use('/api/attendance', attendanceRoutes);
 // Notification Routes
 app.use('/api/notifications', notificationRoutes);
-<<<<<<< HEAD
 // HR Routes
 app.use('/api/hr', hrRoutes);
-=======
+// User Routes
 app.use('/api/users', userRoutes);
-
-
-
->>>>>>> 6bac948 (Employee Panel PRO UI + Dashboard + Profile + Tasks + Reports + Leave + Notification)
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -206,10 +206,74 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 9999;
 
-// Use server.listen instead of app.listen
-server.listen(PORT, () => {
-    console.log(`http://localhost:${PORT}`);
+// Initialize server with database connection
+async function initializeServer() {
+    try {
+        // Connect to database
+        await connectDB();
+        
+        // Start server
+        server.listen(PORT, () => {
+            console.log(`\n🚀 Server running on http://localhost:${PORT}`);
+            console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+            console.log('✅ All systems operational\n');
+        });
+    } catch (error) {
+        console.error('❌ Failed to initialize server:', error.message);
+        process.exit(1);
+    }
+}
+
+// Start the server
+initializeServer();
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+    const stats = getDBStats();
+    const queryMetrics = getQueryMetrics();
+    
+    res.json({
+        status: isDBHealthy() ? 'healthy' : 'unhealthy',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        database: {
+            connected: stats.isConnected,
+            stats: stats
+        },
+        query: queryMetrics,
+        memory: process.memoryUsage()
+    });
 });
+
+// Graceful shutdown handler
+async function gracefulShutdown(signal) {
+    console.log(`\n⚠️ ${signal} received. Starting graceful shutdown...`);
+    
+    // Stop accepting new connections
+    server.close(async () => {
+        try {
+            // Close database connection
+            const { disconnect } = require('./config/db');
+            await disconnect();
+            
+            console.log('✅ Graceful shutdown complete');
+            process.exit(0);
+        } catch (error) {
+            console.error('❌ Error during shutdown:', error.message);
+            process.exit(1);
+        }
+    });
+    
+    // Force shutdown after 30 seconds
+    setTimeout(() => {
+        console.error('❌ Forced shutdown after timeout');
+        process.exit(1);
+    }, 30000);
+}
+
+// Handle shutdown signals
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {

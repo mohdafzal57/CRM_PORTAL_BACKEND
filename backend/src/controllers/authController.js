@@ -7,6 +7,7 @@ const User = require('../models/User');
 const Company = require('../models/Company');
 const { ROLES } = require('../models/User');
 const { validationResult, body } = require('express-validator');
+const { escapeRegex, sanitizeEmail } = require('../utils/securityUtils');
 
 /**
  * Validation rules for admin registration
@@ -96,7 +97,15 @@ const registerAdmin = async (req, res) => {
         } = req.body;
 
         // Check if email already exists
-        const existingUser = await User.findOne({ email: email.toLowerCase() });
+        // SECURITY FIX: Always normalize email input before querying
+        const normalizedEmail = sanitizeEmail(email);
+        if (!normalizedEmail) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid email format'
+            });
+        }
+        const existingUser = await User.findOne({ email: normalizedEmail });
         if (existingUser) {
             return res.status(400).json({
                 success: false,
@@ -105,8 +114,10 @@ const registerAdmin = async (req, res) => {
         }
 
         // Check if company name already exists
+        // SECURITY FIX: Escape user input before using in regex to prevent NoSQL injection
+        const escapedCompanyName = escapeRegex(companyName);
         const existingCompany = await Company.findOne({
-            companyName: { $regex: new RegExp(`^${companyName}$`, 'i') }
+            companyName: { $regex: new RegExp(`^${escapedCompanyName}$`, 'i') }
         });
         if (existingCompany) {
             return res.status(400).json({
@@ -215,8 +226,17 @@ const adminLogin = async (req, res) => {
 
         const { email, password } = req.body;
 
+        // SECURITY FIX: Sanitize and validate email input before database query
+        const normalizedEmail = sanitizeEmail(email);
+        if (!normalizedEmail) {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid email or password'
+            });
+        }
+
         // Find user by email and include password for comparison
-        const user = await User.findOne({ email: email.toLowerCase() })
+        const user = await User.findOne({ email: normalizedEmail })
             .select('+password')
             .populate('companyId', 'companyName companyLogo isActive timezone');
 
@@ -325,8 +345,17 @@ const employeeLogin = async (req, res) => {
         // Allowed roles for employee login
         const allowedRoles = [ROLES.EMPLOYEE, ROLES.HR, ROLES.MANAGER, ROLES.INTERN];
 
+        // SECURITY FIX: Sanitize and validate email input before database query
+        const normalizedEmail = sanitizeEmail(email);
+        if (!normalizedEmail) {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid email or password. Please contact your admin if you need access.'
+            });
+        }
+
         // Find user by email
-        const user = await User.findOne({ email: email.toLowerCase() })
+        const user = await User.findOne({ email: normalizedEmail })
             .select('+password')
             .populate('companyId', 'companyName companyLogo isActive timezone workingHours');
 

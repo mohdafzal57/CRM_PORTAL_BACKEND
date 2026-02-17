@@ -14,8 +14,9 @@ const {
     registerValidation,
     loginValidation
 } = require('../controllers/authController');
-const { protect, rateLimit } = require('../middleware/authMiddleware');
+const { protect } = require('../middleware/authMiddleware');
 const { upload, handleUploadError } = require('../utils/upload');
+const { loginLimiter, registerLimiter } = require('../utils/rateLimiter');
 
 /**
  * @route   POST /api/auth/register
@@ -24,7 +25,7 @@ const { upload, handleUploadError } = require('../utils/upload');
  */
 router.post(
     '/register',
-    rateLimit(5, 60000), // 5 requests per minute
+    registerLimiter,
     upload.single('companyLogo'),
     handleUploadError,
     registerValidation,
@@ -38,7 +39,7 @@ router.post(
  */
 router.post(
     '/admin/login',
-    rateLimit(10, 60000), // 10 requests per minute
+    loginLimiter,
     loginValidation,
     adminLogin
 );
@@ -50,7 +51,7 @@ router.post(
  */
 router.post(
     '/employee/login',
-    rateLimit(10, 60000), // 10 requests per minute
+    loginLimiter,
     loginValidation,
     employeeLogin
 );

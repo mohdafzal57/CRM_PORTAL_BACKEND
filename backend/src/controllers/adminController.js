@@ -8,6 +8,7 @@ const Attendance = require('../models/Attendance'); // New model
 const WorkReport = require('../models/WorkReport'); // New model
 const { generateExcel, generatePDF } = require('../utils/exportUtils');
 const { createNotification } = require('./notificationController');
+const { escapeRegex } = require('../utils/securityUtils');
 
 // ==================== DASHBOARD ====================
 
@@ -105,10 +106,12 @@ exports.getUsers = async (req, res) => {
     if (status === 'active') query.isActive = true;
     if (status === 'disabled') query.isActive = false;
     if (search) {
+      // SECURITY FIX: Escape user input before using in regex to prevent NoSQL injection
+      const escapedSearch = escapeRegex(search);
       query.$or = [
-        { fullName: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } },
-        { employeeId: { $regex: search, $options: 'i' } }
+        { fullName: { $regex: escapedSearch, $options: 'i' } },
+        { email: { $regex: escapedSearch, $options: 'i' } },
+        { employeeId: { $regex: escapedSearch, $options: 'i' } }
       ];
     }
 
