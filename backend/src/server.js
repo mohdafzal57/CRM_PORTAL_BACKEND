@@ -19,7 +19,10 @@ const { getMetrics: getQueryMetrics, resetMetrics: resetQueryMetrics } = require
 const { globalLimiter, applyRoleBasedLimiter } = require('./utils/rateLimiter');
 
 // Import routes
+<<<<<<< Updated upstream
 const hrRoutes = require('./routes/hrRoutes');
+=======
+>>>>>>> Stashed changes
 const userRoutes = require('./routes/userRoutes');
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
@@ -120,11 +123,19 @@ app.use('/api/intern', internRoutes);
 app.use('/api/attendance', attendanceRoutes);
 // Notification Routes
 app.use('/api/notifications', notificationRoutes);
+<<<<<<< Updated upstream
 // HR Routes
 app.use('/api/hr', hrRoutes);
 // User Routes
 app.use('/api/users', userRoutes);
 
+=======
+app.use('/api/users', userRoutes);
+
+
+
+
+>>>>>>> Stashed changes
 // Root endpoint
 app.get('/', (req, res) => {
     res.json({

@@ -5,9 +5,12 @@ import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-d
 // Import your existing pages
 import Attendance from "./pages/employee/Attendance";
 import EmployeeDashboard from "./pages/employee/Dashboard";
+import EmployeeLeave from "./pages/employee/Leave";
 import EmployeeProfile from "./pages/employee/Profile";
 import EmployeeReports from "./pages/employee/Reports";
 import EmployeeTasks from "./pages/employee/Tasks";
+
+
 
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -25,14 +28,14 @@ import {
 
 // HR Pages
 import {
-  HRDashboard,
-  TakeAttendance,
   AttendanceRecords,
   EmployeeDirectory,
-  LeaveManagement,
-  InternManagement,
+  HRDashboard,
+  MyProfile as HRProfile,
   HRReports,
-  MyProfile as HRProfile
+  InternManagement,
+  LeaveManagement,
+  TakeAttendance
 } from './pages/hr';
 
 // Intern Pages
@@ -152,6 +155,12 @@ function App() {
             <Route path="/employee/profile" element={<ProtectedRoute allowedRoles={['EMPLOYEE']}><EmployeeProfile /></ProtectedRoute>} />
             <Route path="/employee/tasks" element={<ProtectedRoute allowedRoles={['EMPLOYEE']}><EmployeeTasks /></ProtectedRoute>} />
             <Route path="/employee/reports" element={<ProtectedRoute allowedRoles={['EMPLOYEE']}><EmployeeReports /></ProtectedRoute>} />
+            <Route path="/employee/leave" element={
+  <ProtectedRoute allowedRoles={['EMPLOYEE']}>
+    <EmployeeLeave />
+  </ProtectedRoute>
+} />
+
 
             {/* ==================== DEFAULT ROUTES ==================== */}
             <Route path="/" element={<Navigate to="/login" replace />} />
