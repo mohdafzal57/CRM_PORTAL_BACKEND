@@ -57,7 +57,6 @@ export const assignTaskToIntern = (userId, taskData) => {
 // ==================== ATTENDANCE ====================
 export const getAttendance = (params) => API.get('/admin/attendance', { params });
 export const getAttendanceSummary = (params) => API.get('/admin/attendance/summary', { params });
-export const getGeoLogs = (params) => API.get('/admin/attendance/geo-logs', { params });
 export const createManualAttendance = (data) => API.post('/admin/attendance/manual', data);
 export const updateAttendance = (id, data) => API.put(`/admin/attendance/${id}`, data);
 export const deleteAttendance = (id) => API.delete(`/admin/attendance/${id}`);
@@ -100,5 +99,30 @@ export const updateSettings = (data) => API.put('/admin/settings', data);
 export const getHolidays = (params) => API.get('/admin/settings/holidays', { params });
 export const addHoliday = (data) => API.post('/admin/settings/holidays', data);
 export const deleteHoliday = (date) => API.delete(`/admin/settings/holidays/${date}`);
+
+// ==================== GEO-LOCATION LOGS ====================
+export const getGeoLogs = (params) => API.get('/admin/geo-logs', { params });
+export const getGeoStats = (params) => API.get('/admin/geo-logs/stats', { params });
+export const getGeoLogById = (id) => API.get(`/admin/geo-logs/${id}`);
+export const getUsersOutsideOffice = () => API.get('/admin/geo-logs/outside-office');
+export const getUserLocationHistory = (userId, params) => API.get(`/admin/geo-logs/user/${userId}`, { params });
+export const verifyLocation = (data) => API.post('/admin/geo-logs/verify-location', data);
+
+export const exportGeoLogs = async (filters = {}) => {
+  try {
+    const response = await API.post('/admin/geo-logs/export', { ...filters, format: 'json' }, { responseType: 'blob' });
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `geo_logs_${Date.now()}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    return { success: true };
+  } catch (error) {
+    throw error;
+  }
+};
 
 export default API;

@@ -16,6 +16,7 @@ const attendanceController = require('../controllers/attendanceController');
 const workReportController = require('../controllers/workReportController');
 const exportController = require('../controllers/exportController');
 const settingsController = require('../controllers/settingsController');
+const geoController = require('../controllers/geoLocationController');
 
 // All routes require authentication
 router.use(protect);
@@ -59,5 +60,14 @@ router.put('/settings', writeLimiter, authorize('ADMIN'), settingsController.upd
 router.get('/settings/holidays', authorize('ADMIN', 'HR'), settingsController.getHolidays);
 router.post('/settings/holidays', writeLimiter, authorize('ADMIN'), settingsController.addHoliday);
 router.delete('/settings/holidays/:date', writeLimiter, authorize('ADMIN'), settingsController.deleteHoliday);
+
+// ==================== GEO-LOCATION LOGS ====================
+router.get('/geo-logs', authorize('ADMIN', 'HR'), geoController.getGeoLogs);
+router.get('/geo-logs/stats', authorize('ADMIN', 'HR'), geoController.getGeoStats);
+router.get('/geo-logs/outside-office', authorize('ADMIN', 'HR'), geoController.getUsersOutsideOffice);
+router.get('/geo-logs/user/:userId', authorize('ADMIN', 'HR'), geoController.getUserLocationHistory);
+router.get('/geo-logs/:id', authorize('ADMIN', 'HR'), geoController.getGeoLogById);
+router.post('/geo-logs/export', authorize('ADMIN', 'HR'), geoController.exportGeoLogs);
+router.post('/geo-logs/verify-location', authorize('ADMIN', 'HR'), geoController.verifyLocation);
 
 module.exports = router;
