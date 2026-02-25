@@ -10,7 +10,8 @@ import EmployeeProfile from "./pages/employee/Profile";
 import EmployeeReports from "./pages/employee/Reports";
 import EmployeeTasks from "./pages/employee/Tasks";
 
-
+// Add with your other page imports
+import { CRMDashboard, Leads, Deals, Contacts } from './pages/crm';
 
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -138,6 +139,13 @@ function App() {
             <Route path="/hr/interns" element={<ProtectedRoute allowedRoles={['HR', 'ADMIN']}><InternManagement /></ProtectedRoute>} />
             <Route path="/hr/reports" element={<ProtectedRoute allowedRoles={['HR', 'ADMIN']}><HRReports /></ProtectedRoute>} />
             <Route path="/hr/profile" element={<ProtectedRoute allowedRoles={['HR', 'ADMIN']}><HRProfile /></ProtectedRoute>} />
+
+            {/* ==================== CRM ROUTES ==================== */}
+            <Route path="/crm" element={<ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}><CRMDashboard /></ProtectedRoute>} />
+            <Route path="/crm/dashboard" element={<Navigate to="/crm" replace />} />
+            <Route path="/crm/leads" element={<ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}><Leads /></ProtectedRoute>} />
+            <Route path="/crm/deals" element={<ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}><Deals /></ProtectedRoute>} />
+            <Route path="/crm/contacts" element={<ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}><Contacts /></ProtectedRoute>} />
 
             {/* ==================== MANAGER ROUTES ==================== */}
             <Route path="/manager/dashboard" element={<ProtectedRoute allowedRoles={['MANAGER']}><PlaceholderDashboard /></ProtectedRoute>} />

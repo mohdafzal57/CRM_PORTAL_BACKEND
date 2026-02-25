@@ -10,6 +10,8 @@ const path = require('path');
 const http = require('http'); // Import HTTP
 const socketIo = require('socket.io'); // Import Socket.io
 require('dotenv').config();
+// Add this with your other route imports (around line 20-25)
+const crmRoutes = require('./routes/crmRoutes');
 
 // Import database connection and optimization
 const { connect: connectDB, disconnect: disconnectDB, getStats: getDBStats, isHealthy: isDBHealthy } = require('./config/db');
@@ -96,6 +98,10 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Serve uploaded files statically
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Add this with your other app.use routes
+// CRM Routes
+app.use('/api/crm', crmRoutes);
 
 // Request logging middleware (development)
 if (process.env.NODE_ENV === 'development') {
