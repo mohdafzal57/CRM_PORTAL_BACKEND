@@ -11,7 +11,17 @@ import EmployeeReports from "./pages/employee/Reports";
 import EmployeeTasks from "./pages/employee/Tasks";
 
 // Add with your other page imports
-import { CRMDashboard, Leads, Deals, Contacts } from './pages/crm';
+import { 
+    CRMDashboard, 
+    Leads, 
+    Deals, 
+    Contacts, 
+    Meetings, 
+    Calls, 
+    Products, 
+    Quotes, 
+    ComingSoon 
+} from './pages/crm';
 
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -141,11 +151,60 @@ function App() {
             <Route path="/hr/profile" element={<ProtectedRoute allowedRoles={['HR', 'ADMIN']}><HRProfile /></ProtectedRoute>} />
 
             {/* ==================== CRM ROUTES ==================== */}
-            <Route path="/crm" element={<ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}><CRMDashboard /></ProtectedRoute>} />
+            {/* <Route path="/crm" element={<ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}><CRMDashboard /></ProtectedRoute>} />
             <Route path="/crm/dashboard" element={<Navigate to="/crm" replace />} />
             <Route path="/crm/leads" element={<ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}><Leads /></ProtectedRoute>} />
             <Route path="/crm/deals" element={<ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}><Deals /></ProtectedRoute>} />
-            <Route path="/crm/contacts" element={<ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}><Contacts /></ProtectedRoute>} />
+            <Route path="/crm/contacts" element={<ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}><Contacts /></ProtectedRoute>} /> */}
+
+            {/* ==================== CRM ROUTES ==================== */}
+            <Route path="/crm" element={<ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}><CRMDashboard /></ProtectedRoute>} />
+            <Route path="/crm/dashboard" element={<Navigate to="/crm" replace />} />
+            <Route path="/crm/leads" element={
+                <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}>
+                    <Leads />
+                </ProtectedRoute>
+            } />
+            <Route path="/crm/deals" element={
+                <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}>
+                    <Deals />
+                </ProtectedRoute>
+            } />
+            <Route path="/crm/contacts" element={
+                <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}>
+                    <Contacts />
+                </ProtectedRoute>
+            } />
+            <Route path="/crm/meetings" element={
+                <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}>
+                    <Meetings />
+                </ProtectedRoute>
+            } />
+            <Route path="/crm/calls" element={
+                <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}>
+                    <Calls />
+                </ProtectedRoute>
+            } />
+            <Route path="/crm/products" element={
+                <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER']}>
+                    <Products />
+                </ProtectedRoute>
+            } />
+            <Route path="/crm/quotes" element={
+                <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}>
+                    <Quotes />
+                </ProtectedRoute>
+            } />
+            <Route path="/crm/accounts" element={
+                <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}>
+                    <ComingSoon title="Accounts" />
+                </ProtectedRoute>
+            } />
+            <Route path="/crm/reports" element={
+                <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}>
+                    <ComingSoon title="CRM Reports" />
+                </ProtectedRoute>
+            } />
 
             {/* ==================== MANAGER ROUTES ==================== */}
             <Route path="/manager/dashboard" element={<ProtectedRoute allowedRoles={['MANAGER']}><PlaceholderDashboard /></ProtectedRoute>} />

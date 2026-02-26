@@ -5,6 +5,24 @@
 
 import React, { useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+// import {
+//     Home,
+//     Users,
+//     Briefcase,
+//     Contact,
+//     Building2,
+//     CheckSquare,
+//     FileText,
+//     BarChart3,
+//     Settings,
+//     LogOut,
+//     X,
+//     Menu,
+//     ChevronLeft,
+//     Calendar,
+//     Target,
+//     TrendingUp
+// } from 'lucide-react';
 import {
     Home,
     Users,
@@ -21,8 +39,22 @@ import {
     ChevronLeft,
     Calendar,
     Target,
-    TrendingUp
+    TrendingUp,
+    Phone,
+    Package
 } from 'lucide-react';
+
+// const menuItems = [
+//     { path: '/crm', name: 'Dashboard', icon: Home, exact: true },
+//     { path: '/crm/leads', name: 'Leads', icon: Target },
+//     { path: '/crm/deals', name: 'Deals', icon: Briefcase },
+//     { path: '/crm/contacts', name: 'Contacts', icon: Contact },
+//     { path: '/crm/accounts', name: 'Accounts', icon: Building2 },
+//     { path: '/crm/activities', name: 'Activities', icon: CheckSquare },
+//     { path: '/crm/calendar', name: 'Calendar', icon: Calendar },
+//     { path: '/crm/reports', name: 'Reports', icon: FileText },
+//     { path: '/crm/analytics', name: 'Analytics', icon: BarChart3 },
+// ];
 
 const menuItems = [
     { path: '/crm', name: 'Dashboard', icon: Home, exact: true },
@@ -30,10 +62,11 @@ const menuItems = [
     { path: '/crm/deals', name: 'Deals', icon: Briefcase },
     { path: '/crm/contacts', name: 'Contacts', icon: Contact },
     { path: '/crm/accounts', name: 'Accounts', icon: Building2 },
-    { path: '/crm/activities', name: 'Activities', icon: CheckSquare },
-    { path: '/crm/calendar', name: 'Calendar', icon: Calendar },
-    { path: '/crm/reports', name: 'Reports', icon: FileText },
-    { path: '/crm/analytics', name: 'Analytics', icon: BarChart3 },
+    { path: '/crm/meetings', name: 'Meetings', icon: Calendar },
+    // { path: '/crm/calls', name: 'Calls', icon: Phone },
+    { path: '/crm/products', name: 'Products', icon: Package },
+    // { path: '/crm/quotes', name: 'Quotes', icon: FileText },
+    { path: '/crm/reports', name: 'Reports', icon: BarChart3 },
 ];
 
 const CRMSidebar = () => {
