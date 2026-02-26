@@ -13,7 +13,7 @@ const { escapeRegex } = require('../utils/securityUtils');
 // ==================== DASHBOARD ====================
 
 // GET /api/admin/dashboard - Dashboard statistics
-exports.getDashboardStats = async (req, res) => {
+exports.getDashboardStats = async (req, res,next) => {
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);

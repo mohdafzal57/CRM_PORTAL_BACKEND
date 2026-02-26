@@ -5,7 +5,7 @@
 import axios from 'axios';
 
 // API Base URL - Vite uses import.meta.env
-const API_BASE_URL = 'http://localhost:9999/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:9999/api';
 
 // Create axios instance
 const api = axios.create({
@@ -42,7 +42,7 @@ api.interceptors.response.use(
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       if (!window.location.pathname.includes('/login') &&
-        !window.location.pathname.includes('/register')) {
+          !window.location.pathname.includes('/register')) {
         window.location.href = '/login';
       }
     }

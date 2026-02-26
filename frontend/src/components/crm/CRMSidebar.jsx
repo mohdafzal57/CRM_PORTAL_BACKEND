@@ -2,7 +2,7 @@
  * CRM Sidebar Navigation
  * Light blue gradient theme matching Zoho CRM style
  */
-
+import { ClipboardList, ShoppingCart } from "lucide-react";
 import React, { useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 // import {
@@ -24,24 +24,19 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 //     TrendingUp
 // } from 'lucide-react';
 import {
-    Home,
-    Users,
-    Briefcase,
-    Contact,
-    Building2,
-    CheckSquare,
-    FileText,
     BarChart3,
-    Settings,
-    LogOut,
-    X,
-    Menu,
-    ChevronLeft,
+    Briefcase,
+    Building2,
     Calendar,
+    ChevronLeft,
+    Contact,
+    Home,
+    LogOut,
+    Menu,
+    Package,
     Target,
     TrendingUp,
-    Phone,
-    Package
+    X
 } from 'lucide-react';
 
 // const menuItems = [
@@ -67,6 +62,8 @@ const menuItems = [
     { path: '/crm/products', name: 'Products', icon: Package },
     // { path: '/crm/quotes', name: 'Quotes', icon: FileText },
     { path: '/crm/reports', name: 'Reports', icon: BarChart3 },
+    { path: "/crm/work-queue", name: "Work Queue", icon: ClipboardList },
+    { path: "/crm/orders", name: "Orders", icon: ShoppingCart }
 ];
 
 const CRMSidebar = () => {

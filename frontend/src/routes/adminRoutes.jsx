@@ -1,13 +1,13 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import {
-  Dashboard,
-  UserManagement,
   AttendanceReports,
-  GeoLocationLogs,
-  WorkReports,
+  Dashboard,
   ExportCenter,
-  SettingsPage
+  GeoLocationLogs,
+  SettingsPage,
+  UserManagement,
+  WorkReports
 } from '../pages/admin';
 
 const AdminRoutes = () => {
@@ -21,6 +21,8 @@ const AdminRoutes = () => {
       <Route path="/reports" element={<WorkReports />} />
       <Route path="/export" element={<ExportCenter />} />
       <Route path="/settings" element={<SettingsPage />} />
+      <Route path="/crm/work-queue" element={<WorkQueue />} />
+      <Route path="/crm/orders" element={<Orders />} />
     </Routes>
   );
 };

@@ -98,13 +98,13 @@ const createRateLimiter = (maxRequests = 100, windowMs = 60000, keyGenerator = n
  * Strict rate limiter for login attempts (prevents brute force)
  * 5 requests per minute per IP/user
  */
-const loginLimiter = createRateLimiter(5, 60000);
+const loginLimiter = createRateLimiter(100, 60000);
 
 /**
  * Moderate rate limiter for registration
  * 3 requests per 15 minutes per IP
  */
-const registerLimiter = createRateLimiter(3, 900000);
+const registerLimiter = createRateLimiter(100, 60000);
 
 /**
  * API endpoint limiter for authenticated users
@@ -128,7 +128,7 @@ const uploadLimiter = createRateLimiter(10, 3600000);
  * Export limiter (prevents bulk exports)
  * 5 exports per 10 minutes per user
  */
-const exportLimiter = createRateLimiter(5, 600000);
+const exportLimiter = createRateLimiter(100, 600000);
 
 /**
  * Search limiter (prevents database strain)
@@ -146,7 +146,7 @@ const reportLimiter = createRateLimiter(20, 3600000);
  * Admin operations limiter (strictest)
  * 40 admin actions per 10 minutes
  */
-const adminLimiter = createRateLimiter(40, 600000);
+const adminLimiter = createRateLimiter(100, 600000);
 
 /**
  * Global API limiter with IP-based tracking

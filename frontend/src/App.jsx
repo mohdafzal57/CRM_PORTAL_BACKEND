@@ -10,17 +10,22 @@ import EmployeeProfile from "./pages/employee/Profile";
 import EmployeeReports from "./pages/employee/Reports";
 import EmployeeTasks from "./pages/employee/Tasks";
 
+
+import Orders from "./pages/crm/Orders";
+import WorkQueue from "./pages/crm/WorkQueue";
+
+
 // Add with your other page imports
-import { 
-    CRMDashboard, 
-    Leads, 
-    Deals, 
-    Contacts, 
-    Meetings, 
-    Calls, 
-    Products, 
-    Quotes, 
-    ComingSoon 
+import {
+  CRMDashboard,
+  Calls,
+  ComingSoon,
+  Contacts,
+  Deals,
+  Leads,
+  Meetings,
+  Products,
+  Quotes
 } from './pages/crm';
 
 import Login from './pages/Login';
@@ -205,6 +210,8 @@ function App() {
                     <ComingSoon title="CRM Reports" />
                 </ProtectedRoute>
             } />
+            <Route path="/crm/work-queue" element={<WorkQueue />} />
+            <Route path="/crm/orders" element={<Orders />} /> 
 
             {/* ==================== MANAGER ROUTES ==================== */}
             <Route path="/manager/dashboard" element={<ProtectedRoute allowedRoles={['MANAGER']}><PlaceholderDashboard /></ProtectedRoute>} />
