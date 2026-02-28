@@ -40,7 +40,7 @@ const CRMDashboard = () => {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            const { data } = await axios.get(`${API_BASE}/api/crm/dashboard/stats`, {
+            const { data } = await axios.get(`${API_BASE}/crm/dashboard/stats`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             
