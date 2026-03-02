@@ -36,7 +36,9 @@ import {
     Package,
     Target,
     TrendingUp,
-    X
+    X,
+    Phone,        // ✅ ADD THIS
+    FileText 
 } from 'lucide-react';
 
 // const menuItems = [
