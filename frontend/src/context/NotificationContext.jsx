@@ -57,14 +57,20 @@ export const NotificationProvider = ({ children }) => {
     };
 
     useEffect(() => {
-        fetchNotifications();
+        const token = localStorage.getItem('token');
+        if (token) {
+            fetchNotifications();
+        } else {
+            setLoading(false);
+        }
     }, [fetchNotifications]);
 
     // Socket.io integration for real-time notifications
     useEffect(() => {
         // Initialize socket connection using the underlying variable from api service if available, 
         // or create a new reliable connection
-        const newSocket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000', {
+        const socketUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
+        const newSocket = io(socketUrl, {
             withCredentials: true,
             transports: ['websocket', 'polling']
         });

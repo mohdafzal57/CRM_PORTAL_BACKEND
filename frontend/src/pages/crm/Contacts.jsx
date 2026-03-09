@@ -3,14 +3,14 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 import CRMLayout from '../../components/crm/CRMLayout';
 import {
     Plus, Search, Edit2, Trash2, X, ChevronLeft, ChevronRight,
     Users, Mail, Phone, Building, RefreshCw
 } from 'lucide-react';
 
-const API_BASE = import.meta.env.VITE_API_URL || '';
+// Redundant API_BASE removed
 
 const Contacts = () => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -44,16 +44,14 @@ const Contacts = () => {
     const fetchContacts = useCallback(async () => {
         try {
             setLoading(true);
-            const token = localStorage.getItem('token');
-            const { data } = await axios.get(`${API_BASE}/api/crm/contacts`, {
-                headers: { Authorization: `Bearer ${token}` },
+            const { data } = await api.get('/crm/contacts', {
                 params: {
                     search: debouncedSearch,
                     page: pagination.page,
                     limit: 10
                 }
             });
-            
+
             if (data.success) {
                 setContacts(data.data.contacts);
                 setPagination(prev => ({
@@ -76,20 +74,16 @@ const Contacts = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitLoading(true);
-        
+
         try {
             const token = localStorage.getItem('token');
 
             if (editingContact) {
-                await axios.put(`${API_BASE}/api/crm/contacts/${editingContact._id}`, formData, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                await api.put(`/crm/contacts/${editingContact._id}`, formData);
             } else {
-                await axios.post(`${API_BASE}/api/crm/contacts`, formData, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                await api.post('/crm/contacts', formData);
             }
-            
+
             setModalOpen(false);
             setEditingContact(null);
             resetForm();
@@ -118,12 +112,9 @@ const Contacts = () => {
 
     const handleDelete = async (id) => {
         if (!window.confirm('Are you sure you want to delete this contact?')) return;
-        
+
         try {
-            const token = localStorage.getItem('token');
-            await axios.delete(`${API_BASE}/api/crm/contacts/${id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await api.delete(`/crm/contacts/${id}`);
             fetchContacts();
         } catch (error) {
             console.error('Error deleting contact:', error);

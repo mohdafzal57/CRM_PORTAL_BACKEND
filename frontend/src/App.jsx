@@ -23,9 +23,15 @@ import {
   Contacts,
   Deals,
   Leads,
+  Accounts,
+  Reports,
   Meetings,
   Products,
-  Quotes
+  Quotes,
+  Profile,
+  Settings,
+  CRMLogin,
+  CRMRegister
 } from './pages/crm';
 
 import Login from './pages/Login';
@@ -114,9 +120,13 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
         'HR': '/hr',
         'MANAGER': '/manager/dashboard',
         'EMPLOYEE': '/employee/dashboard',
-        'INTERN': '/intern/dashboard'
+        'INTERN': '/intern/dashboard',
+        'SALES': '/crm'
       };
-      return <Navigate to={dashboards[userRole] || '/login'} replace />;
+
+      const targetPath = dashboards[userRole] || '/login';
+      if (window.location.pathname === targetPath) return children;
+      return <Navigate to={targetPath} replace />;
     }
   }
 
@@ -133,6 +143,8 @@ function App() {
             {/* ==================== PUBLIC ROUTES ==================== */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/crm/login" element={<CRMLogin />} />
+            <Route path="/crm/register" element={<CRMRegister />} />
 
             {/* ==================== ADMIN ROUTES ==================== */}
             <Route path="/admin" element={<ProtectedRoute allowedRoles={['ADMIN']}><AdminDashboard /></ProtectedRoute>} />
@@ -166,52 +178,62 @@ function App() {
             <Route path="/crm" element={<ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}><CRMDashboard /></ProtectedRoute>} />
             <Route path="/crm/dashboard" element={<Navigate to="/crm" replace />} />
             <Route path="/crm/leads" element={
-                <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}>
-                    <Leads />
-                </ProtectedRoute>
+              <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}>
+                <Leads />
+              </ProtectedRoute>
             } />
             <Route path="/crm/deals" element={
-                <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}>
-                    <Deals />
-                </ProtectedRoute>
+              <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}>
+                <Deals />
+              </ProtectedRoute>
             } />
             <Route path="/crm/contacts" element={
-                <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}>
-                    <Contacts />
-                </ProtectedRoute>
+              <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}>
+                <Contacts />
+              </ProtectedRoute>
             } />
             <Route path="/crm/meetings" element={
-                <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}>
-                    <Meetings />
-                </ProtectedRoute>
+              <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}>
+                <Meetings />
+              </ProtectedRoute>
             } />
             <Route path="/crm/calls" element={
-                <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}>
-                    <Calls />
-                </ProtectedRoute>
+              <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}>
+                <Calls />
+              </ProtectedRoute>
             } />
             <Route path="/crm/products" element={
-                <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER']}>
-                    <Products />
-                </ProtectedRoute>
+              <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER']}>
+                <Products />
+              </ProtectedRoute>
             } />
             <Route path="/crm/quotes" element={
-                <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}>
-                    <Quotes />
-                </ProtectedRoute>
+              <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}>
+                <Quotes />
+              </ProtectedRoute>
             } />
             <Route path="/crm/accounts" element={
-                <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}>
-                    <ComingSoon title="Accounts" />
-                </ProtectedRoute>
+              <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}>
+                <Accounts />
+              </ProtectedRoute>
             } />
             <Route path="/crm/reports" element={
-                <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}>
-                    <ComingSoon title="CRM Reports" />
-                </ProtectedRoute>
+              <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}>
+                <Reports />
+              </ProtectedRoute>
+            } />
+            <Route path="/crm/profile" element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}>
+                <Profile />
+              </ProtectedRoute>
+            } />
+            <Route path="/crm/settings" element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE', 'SALES']}>
+                <Settings />
+              </ProtectedRoute>
             } />
             <Route path="/crm/work-queue" element={<WorkQueue />} />
-            <Route path="/crm/orders" element={<Orders />} /> 
+            <Route path="/crm/orders" element={<Orders />} />
 
             {/* ==================== MANAGER ROUTES ==================== */}
             <Route path="/manager/dashboard" element={<ProtectedRoute allowedRoles={['MANAGER']}><PlaceholderDashboard /></ProtectedRoute>} />
@@ -230,14 +252,18 @@ function App() {
             <Route path="/employee/tasks" element={<ProtectedRoute allowedRoles={['EMPLOYEE']}><EmployeeTasks /></ProtectedRoute>} />
             <Route path="/employee/reports" element={<ProtectedRoute allowedRoles={['EMPLOYEE']}><EmployeeReports /></ProtectedRoute>} />
             <Route path="/employee/leave" element={
-  <ProtectedRoute allowedRoles={['EMPLOYEE']}>
-    <EmployeeLeave />
-  </ProtectedRoute>
-} />
+              <ProtectedRoute allowedRoles={['EMPLOYEE']}>
+                <EmployeeLeave />
+              </ProtectedRoute>
+            } />
 
 
             {/* ==================== DEFAULT ROUTES ==================== */}
-            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/" element={
+              <ProtectedRoute>
+                <Navigate to="/login" replace />
+              </ProtectedRoute>
+            } />
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
         </Router>

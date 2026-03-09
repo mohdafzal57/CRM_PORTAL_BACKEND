@@ -195,7 +195,25 @@ const Register = () => {
         navigate('/admin/dashboard');
       }
     } catch (error) {
-      setApiError(error.message || 'Registration failed. Please try again.');
+      console.error('Registration Error Details:', error.response?.data);
+
+      let errorMessage = 'Registration failed. Please try again.';
+
+      if (error.response?.data) {
+        const data = error.response.data;
+        // Check for express-validator style errors
+        if (data.errors && Array.isArray(data.errors) && data.errors.length > 0) {
+          errorMessage = data.errors[0].message || data.errors[0].msg;
+        }
+        // Check for direct message or error field
+        else if (data.message || data.error) {
+          errorMessage = data.message || data.error;
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      setApiError(errorMessage);
     } finally {
       setLoading(false);
     }

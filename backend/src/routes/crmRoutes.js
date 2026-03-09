@@ -26,15 +26,15 @@ const { protect, authorize } = require('../middleware/authMiddleware');
  */
 const buildRoleQuery = async (user, assignedField = 'assignedTo') => {
     const role = user.role?.toUpperCase();
-    
+
     switch (role) {
         case 'ADMIN':
             return {}; // Admin sees everything
-        
+
         case 'MANAGER':
         case 'HR':
             // Manager/HR sees their team's data
-            const teamMembers = await User.find({ 
+            const teamMembers = await User.find({
                 $or: [
                     { manager: user._id },
                     { department: user.department }
@@ -42,7 +42,7 @@ const buildRoleQuery = async (user, assignedField = 'assignedTo') => {
             }).select('_id');
             const teamIds = [user._id, ...teamMembers.map(m => m._id)];
             return { [assignedField]: { $in: teamIds } };
-        
+
         case 'EMPLOYEE':
         case 'SALES':
         case 'SUPPORT':
@@ -72,7 +72,7 @@ const canDelete = (role) => {
 // DASHBOARD STATS
 // ============================================
 router.get('/dashboard/stats', protect, async (req, res) => {
-    
+
     try {
         const userId = req.user._id;
         const role = req.user.role?.toUpperCase();
@@ -116,8 +116,8 @@ router.get('/dashboard/stats', protect, async (req, res) => {
                 { $group: { _id: null, total: { $sum: '$value' } } }
             ]),
             CRMContact.countDocuments(await buildRoleQuery(req.user)),
-            Activity.countDocuments({ 
-                assignedTo: userId, 
+            Activity.countDocuments({
+                assignedTo: userId,
                 completed: false,
                 dueDate: { $gte: new Date() }
             }),
@@ -144,12 +144,12 @@ router.get('/dashboard/stats', protect, async (req, res) => {
         // Get deal pipeline
         const pipeline = await Deal.aggregate([
             { $match: dealQuery },
-            { 
-                $group: { 
-                    _id: '$stage', 
-                    count: { $sum: 1 }, 
-                    value: { $sum: '$value' } 
-                } 
+            {
+                $group: {
+                    _id: '$stage',
+                    count: { $sum: 1 },
+                    value: { $sum: '$value' }
+                }
             },
             { $sort: { _id: 1 } }
         ]);
@@ -160,26 +160,26 @@ router.get('/dashboard/stats', protect, async (req, res) => {
             completed: false,
             dueDate: { $gte: new Date() }
         })
-        .sort({ dueDate: 1 })
-        .limit(5)
-        .populate('relatedTo');
+            .sort({ dueDate: 1 })
+            .limit(5)
+            .populate('relatedTo');
 
         // Monthly trends (last 6 months)
         const sixMonthsAgo = new Date();
         sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
         const monthlyLeads = await Lead.aggregate([
-            { 
-                $match: { 
-                    ...leadQuery, 
-                    createdAt: { $gte: sixMonthsAgo } 
-                } 
+            {
+                $match: {
+                    ...leadQuery,
+                    createdAt: { $gte: sixMonthsAgo }
+                }
             },
             {
                 $group: {
-                    _id: { 
-                        month: { $month: '$createdAt' }, 
-                        year: { $year: '$createdAt' } 
+                    _id: {
+                        month: { $month: '$createdAt' },
+                        year: { $year: '$createdAt' }
                     },
                     count: { $sum: 1 }
                 }
@@ -188,18 +188,18 @@ router.get('/dashboard/stats', protect, async (req, res) => {
         ]);
 
         const monthlyDeals = await Deal.aggregate([
-            { 
-                $match: { 
-                    ...dealQuery, 
+            {
+                $match: {
+                    ...dealQuery,
                     stage: 'closed_won',
-                    createdAt: { $gte: sixMonthsAgo } 
-                } 
+                    createdAt: { $gte: sixMonthsAgo }
+                }
             },
             {
                 $group: {
-                    _id: { 
-                        month: { $month: '$createdAt' }, 
-                        year: { $year: '$createdAt' } 
+                    _id: {
+                        month: { $month: '$createdAt' },
+                        year: { $year: '$createdAt' }
                     },
                     count: { $sum: 1 },
                     value: { $sum: '$value' }
@@ -247,9 +247,9 @@ router.get('/dashboard/stats', protect, async (req, res) => {
         });
     } catch (error) {
         console.error('Dashboard stats error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: error.message 
+        res.status(500).json({
+            success: false,
+            message: error.message
         });
     }
 });
@@ -261,26 +261,26 @@ router.get('/dashboard/stats', protect, async (req, res) => {
 // Get all leads with filtering, search, pagination
 router.get('/leads', protect, async (req, res) => {
     try {
-        const { 
-            status, 
-            source, 
+        const {
+            status,
+            source,
             priority,
-            search, 
-            page = 1, 
+            search,
+            page = 1,
             limit = 10,
             sortBy = 'createdAt',
             sortOrder = 'desc',
             startDate,
             endDate
         } = req.query;
-        
+
         let query = await buildRoleQuery(req.user);
-        
+
         // Filter by status
         if (status && status !== 'all') {
             query.status = status;
         }
-        
+
         // Filter by source
         if (source && source !== 'all') {
             query.source = source;
@@ -297,7 +297,7 @@ router.get('/leads', protect, async (req, res) => {
             if (startDate) query.createdAt.$gte = new Date(startDate);
             if (endDate) query.createdAt.$lte = new Date(endDate);
         }
-        
+
         // Search
         if (search) {
             query.$or = [
@@ -343,35 +343,35 @@ router.get('/leads/:id', protect, async (req, res) => {
             .populate('assignedTo', 'fullName email avatar')
             .populate('convertedToContactId')
             .populate('convertedToDealId');
-        
+
         if (!lead) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Lead not found' 
+            return res.status(404).json({
+                success: false,
+                message: 'Lead not found'
             });
         }
 
         // Check access
         const role = req.user.role?.toUpperCase();
-        if (!['ADMIN', 'MANAGER', 'HR'].includes(role) && 
+        if (!['ADMIN', 'MANAGER', 'HR'].includes(role) &&
             lead.assignedTo._id.toString() !== req.user._id.toString()) {
-            return res.status(403).json({ 
-                success: false, 
-                message: 'Not authorized to view this lead' 
+            return res.status(403).json({
+                success: false,
+                message: 'Not authorized to view this lead'
             });
         }
 
         // Get related activities
-        const activities = await Activity.find({ 
-            relatedTo: lead._id, 
-            relatedModel: 'Lead' 
+        const activities = await Activity.find({
+            relatedTo: lead._id,
+            relatedModel: 'Lead'
         })
-        .sort({ createdAt: -1 })
-        .limit(10);
+            .sort({ createdAt: -1 })
+            .limit(10);
 
-        res.json({ 
-            success: true, 
-            data: { lead, activities } 
+        res.json({
+            success: true,
+            data: { lead, activities }
         });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -382,9 +382,9 @@ router.get('/leads/:id', protect, async (req, res) => {
 router.post('/leads', protect, async (req, res) => {
     try {
         if (!canWrite(req.user.role)) {
-            return res.status(403).json({ 
-                success: false, 
-                message: 'You do not have permission to create leads' 
+            return res.status(403).json({
+                success: false,
+                message: 'You do not have permission to create leads'
             });
         }
 
@@ -410,8 +410,8 @@ router.post('/leads', protect, async (req, res) => {
             completedAt: new Date()
         });
 
-        res.status(201).json({ 
-            success: true, 
+        res.status(201).json({
+            success: true,
             data: populatedLead,
             message: 'Lead created successfully'
         });
@@ -424,28 +424,28 @@ router.post('/leads', protect, async (req, res) => {
 router.put('/leads/:id', protect, async (req, res) => {
     try {
         if (!canWrite(req.user.role)) {
-            return res.status(403).json({ 
-                success: false, 
-                message: 'You do not have permission to update leads' 
+            return res.status(403).json({
+                success: false,
+                message: 'You do not have permission to update leads'
             });
         }
 
         let lead = await Lead.findById(req.params.id);
-        
+
         if (!lead) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Lead not found' 
+            return res.status(404).json({
+                success: false,
+                message: 'Lead not found'
             });
         }
 
         // Check authorization
         const role = req.user.role?.toUpperCase();
-        if (!['ADMIN', 'MANAGER', 'HR'].includes(role) && 
+        if (!['ADMIN', 'MANAGER', 'HR'].includes(role) &&
             lead.assignedTo.toString() !== req.user._id.toString()) {
-            return res.status(403).json({ 
-                success: false, 
-                message: 'Not authorized to update this lead' 
+            return res.status(403).json({
+                success: false,
+                message: 'Not authorized to update this lead'
             });
         }
 
@@ -474,8 +474,8 @@ router.put('/leads/:id', protect, async (req, res) => {
             });
         }
 
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             data: lead,
             message: 'Lead updated successfully'
         });
@@ -488,29 +488,29 @@ router.put('/leads/:id', protect, async (req, res) => {
 router.delete('/leads/:id', protect, async (req, res) => {
     try {
         if (!canDelete(req.user.role)) {
-            return res.status(403).json({ 
-                success: false, 
-                message: 'You do not have permission to delete leads' 
+            return res.status(403).json({
+                success: false,
+                message: 'You do not have permission to delete leads'
             });
         }
 
         const lead = await Lead.findById(req.params.id);
-        
+
         if (!lead) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Lead not found' 
+            return res.status(404).json({
+                success: false,
+                message: 'Lead not found'
             });
         }
 
         // Delete related activities
         await Activity.deleteMany({ relatedTo: lead._id, relatedModel: 'Lead' });
-        
+
         await Lead.findByIdAndDelete(req.params.id);
-        
-        res.json({ 
-            success: true, 
-            message: 'Lead deleted successfully' 
+
+        res.json({
+            success: true,
+            message: 'Lead deleted successfully'
         });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -521,18 +521,18 @@ router.delete('/leads/:id', protect, async (req, res) => {
 router.post('/leads/:id/convert', protect, async (req, res) => {
     try {
         if (!canWrite(req.user.role)) {
-            return res.status(403).json({ 
-                success: false, 
-                message: 'You do not have permission to convert leads' 
+            return res.status(403).json({
+                success: false,
+                message: 'You do not have permission to convert leads'
             });
         }
 
         const lead = await Lead.findById(req.params.id);
-        
+
         if (!lead) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Lead not found' 
+            return res.status(404).json({
+                success: false,
+                message: 'Lead not found'
             });
         }
 
@@ -597,9 +597,9 @@ router.post('/leads/:id/convert', protect, async (req, res) => {
 router.put('/leads/bulk/update', protect, async (req, res) => {
     try {
         if (!canWrite(req.user.role)) {
-            return res.status(403).json({ 
-                success: false, 
-                message: 'You do not have permission to update leads' 
+            return res.status(403).json({
+                success: false,
+                message: 'You do not have permission to update leads'
             });
         }
 
@@ -634,19 +634,19 @@ router.put('/leads/bulk/update', protect, async (req, res) => {
 // Get all deals
 router.get('/deals', protect, async (req, res) => {
     try {
-        const { 
-            stage, 
-            search, 
-            page = 1, 
+        const {
+            stage,
+            search,
+            page = 1,
             limit = 10,
             sortBy = 'createdAt',
             sortOrder = 'desc',
             minValue,
             maxValue
         } = req.query;
-        
+
         let query = await buildRoleQuery(req.user, 'owner');
-        
+
         if (stage && stage !== 'all') {
             query.stage = stage;
         }
@@ -656,7 +656,7 @@ router.get('/deals', protect, async (req, res) => {
             if (minValue) query.value.$gte = parseFloat(minValue);
             if (maxValue) query.value.$lte = parseFloat(maxValue);
         }
-        
+
         if (search) {
             query.title = { $regex: search, $options: 'i' };
         }
@@ -696,33 +696,33 @@ router.get('/deals/:id', protect, async (req, res) => {
             .populate('owner', 'fullName email avatar')
             .populate('contact', 'firstName lastName email phone company')
             .populate('lead', 'name email');
-        
+
         if (!deal) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Deal not found' 
+            return res.status(404).json({
+                success: false,
+                message: 'Deal not found'
             });
         }
 
         const role = req.user.role?.toUpperCase();
-        if (!['ADMIN', 'MANAGER', 'HR'].includes(role) && 
+        if (!['ADMIN', 'MANAGER', 'HR'].includes(role) &&
             deal.owner._id.toString() !== req.user._id.toString()) {
-            return res.status(403).json({ 
-                success: false, 
-                message: 'Not authorized to view this deal' 
+            return res.status(403).json({
+                success: false,
+                message: 'Not authorized to view this deal'
             });
         }
 
-        const activities = await Activity.find({ 
-            relatedTo: deal._id, 
-            relatedModel: 'Deal' 
+        const activities = await Activity.find({
+            relatedTo: deal._id,
+            relatedModel: 'Deal'
         })
-        .sort({ createdAt: -1 })
-        .limit(10);
+            .sort({ createdAt: -1 })
+            .limit(10);
 
-        res.json({ 
-            success: true, 
-            data: { deal, activities } 
+        res.json({
+            success: true,
+            data: { deal, activities }
         });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -733,9 +733,9 @@ router.get('/deals/:id', protect, async (req, res) => {
 router.post('/deals', protect, async (req, res) => {
     try {
         if (!canWrite(req.user.role)) {
-            return res.status(403).json({ 
-                success: false, 
-                message: 'You do not have permission to create deals' 
+            return res.status(403).json({
+                success: false,
+                message: 'You do not have permission to create deals'
             });
         }
 
@@ -761,8 +761,8 @@ router.post('/deals', protect, async (req, res) => {
             completedAt: new Date()
         });
 
-        res.status(201).json({ 
-            success: true, 
+        res.status(201).json({
+            success: true,
             data: populatedDeal,
             message: 'Deal created successfully'
         });
@@ -775,27 +775,27 @@ router.post('/deals', protect, async (req, res) => {
 router.put('/deals/:id', protect, async (req, res) => {
     try {
         if (!canWrite(req.user.role)) {
-            return res.status(403).json({ 
-                success: false, 
-                message: 'You do not have permission to update deals' 
+            return res.status(403).json({
+                success: false,
+                message: 'You do not have permission to update deals'
             });
         }
 
         let deal = await Deal.findById(req.params.id);
-        
+
         if (!deal) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Deal not found' 
+            return res.status(404).json({
+                success: false,
+                message: 'Deal not found'
             });
         }
 
         const role = req.user.role?.toUpperCase();
-        if (!['ADMIN', 'MANAGER', 'HR'].includes(role) && 
+        if (!['ADMIN', 'MANAGER', 'HR'].includes(role) &&
             deal.owner.toString() !== req.user._id.toString()) {
-            return res.status(403).json({ 
-                success: false, 
-                message: 'Not authorized to update this deal' 
+            return res.status(403).json({
+                success: false,
+                message: 'Not authorized to update this deal'
             });
         }
 
@@ -807,7 +807,7 @@ router.put('/deals/:id', protect, async (req, res) => {
             { ...req.body, updatedAt: Date.now() },
             { new: true, runValidators: true }
         ).populate('owner', 'fullName email avatar')
-         .populate('contact', 'firstName lastName email');
+            .populate('contact', 'firstName lastName email');
 
         if (oldStage !== newStage) {
             await Activity.create({
@@ -836,8 +836,8 @@ router.put('/deals/:id', protect, async (req, res) => {
             }
         }
 
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             data: deal,
             message: 'Deal updated successfully'
         });
@@ -850,27 +850,27 @@ router.put('/deals/:id', protect, async (req, res) => {
 router.delete('/deals/:id', protect, async (req, res) => {
     try {
         if (!canDelete(req.user.role)) {
-            return res.status(403).json({ 
-                success: false, 
-                message: 'You do not have permission to delete deals' 
+            return res.status(403).json({
+                success: false,
+                message: 'You do not have permission to delete deals'
             });
         }
 
         const deal = await Deal.findById(req.params.id);
-        
+
         if (!deal) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Deal not found' 
+            return res.status(404).json({
+                success: false,
+                message: 'Deal not found'
             });
         }
 
         await Activity.deleteMany({ relatedTo: deal._id, relatedModel: 'Deal' });
         await Deal.findByIdAndDelete(req.params.id);
-        
-        res.json({ 
-            success: true, 
-            message: 'Deal deleted successfully' 
+
+        res.json({
+            success: true,
+            message: 'Deal deleted successfully'
         });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -898,8 +898,8 @@ router.get('/deals/pipeline/summary', protect, async (req, res) => {
                     count: 1,
                     totalValue: 1,
                     avgProbability: { $round: ['$avgProbability', 1] },
-                    weightedValue: { 
-                        $round: [{ $multiply: ['$totalValue', { $divide: ['$avgProbability', 100] }] }, 2] 
+                    weightedValue: {
+                        $round: [{ $multiply: ['$totalValue', { $divide: ['$avgProbability', 100] }] }, 2]
                     }
                 }
             },
@@ -907,13 +907,13 @@ router.get('/deals/pipeline/summary', protect, async (req, res) => {
         ]);
 
         const stageOrder = ['prospecting', 'qualification', 'needs_analysis', 'proposal', 'negotiation', 'closed_won', 'closed_lost'];
-        const sortedPipeline = stageOrder.map(stage => 
-            pipeline.find(p => p.stage === stage) || { 
-                stage, 
-                count: 0, 
-                totalValue: 0, 
-                avgProbability: 0, 
-                weightedValue: 0 
+        const sortedPipeline = stageOrder.map(stage =>
+            pipeline.find(p => p.stage === stage) || {
+                stage,
+                count: 0,
+                totalValue: 0,
+                avgProbability: 0,
+                weightedValue: 0
             }
         );
 
@@ -933,21 +933,21 @@ router.get('/deals/pipeline/summary', protect, async (req, res) => {
 // Get all contacts
 router.get('/contacts', protect, async (req, res) => {
     try {
-        const { 
-            search, 
+        const {
+            search,
             company,
-            page = 1, 
+            page = 1,
             limit = 10,
             sortBy = 'createdAt',
             sortOrder = 'desc'
         } = req.query;
-        
+
         let query = await buildRoleQuery(req.user);
-        
+
         if (company) {
             query.company = { $regex: company, $options: 'i' };
         }
-        
+
         if (search) {
             query.$or = [
                 { firstName: { $regex: search, $options: 'i' } },
@@ -991,11 +991,11 @@ router.get('/contacts/:id', protect, async (req, res) => {
         const contact = await CRMContact.findById(req.params.id)
             .populate('assignedTo', 'fullName email avatar')
             .populate('accountId', 'name');
-        
+
         if (!contact) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Contact not found' 
+            return res.status(404).json({
+                success: false,
+                message: 'Contact not found'
             });
         }
 
@@ -1005,16 +1005,16 @@ router.get('/contacts/:id', protect, async (req, res) => {
             .limit(5);
 
         // Get related activities
-        const activities = await Activity.find({ 
-            relatedTo: contact._id, 
-            relatedModel: 'CRMContact' 
+        const activities = await Activity.find({
+            relatedTo: contact._id,
+            relatedModel: 'CRMContact'
         })
-        .sort({ createdAt: -1 })
-        .limit(10);
+            .sort({ createdAt: -1 })
+            .limit(10);
 
-        res.json({ 
-            success: true, 
-            data: { contact, deals, activities } 
+        res.json({
+            success: true,
+            data: { contact, deals, activities }
         });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -1025,9 +1025,9 @@ router.get('/contacts/:id', protect, async (req, res) => {
 router.post('/contacts', protect, async (req, res) => {
     try {
         if (!canWrite(req.user.role)) {
-            return res.status(403).json({ 
-                success: false, 
-                message: 'You do not have permission to create contacts' 
+            return res.status(403).json({
+                success: false,
+                message: 'You do not have permission to create contacts'
             });
         }
 
@@ -1040,8 +1040,8 @@ router.post('/contacts', protect, async (req, res) => {
         const populatedContact = await CRMContact.findById(contact._id)
             .populate('assignedTo', 'fullName email avatar');
 
-        res.status(201).json({ 
-            success: true, 
+        res.status(201).json({
+            success: true,
             data: populatedContact,
             message: 'Contact created successfully'
         });
@@ -1054,18 +1054,18 @@ router.post('/contacts', protect, async (req, res) => {
 router.put('/contacts/:id', protect, async (req, res) => {
     try {
         if (!canWrite(req.user.role)) {
-            return res.status(403).json({ 
-                success: false, 
-                message: 'You do not have permission to update contacts' 
+            return res.status(403).json({
+                success: false,
+                message: 'You do not have permission to update contacts'
             });
         }
 
         let contact = await CRMContact.findById(req.params.id);
-        
+
         if (!contact) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Contact not found' 
+            return res.status(404).json({
+                success: false,
+                message: 'Contact not found'
             });
         }
 
@@ -1075,8 +1075,8 @@ router.put('/contacts/:id', protect, async (req, res) => {
             { new: true, runValidators: true }
         ).populate('assignedTo', 'fullName email avatar');
 
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             data: contact,
             message: 'Contact updated successfully'
         });
@@ -1089,27 +1089,27 @@ router.put('/contacts/:id', protect, async (req, res) => {
 router.delete('/contacts/:id', protect, async (req, res) => {
     try {
         if (!canDelete(req.user.role)) {
-            return res.status(403).json({ 
-                success: false, 
-                message: 'You do not have permission to delete contacts' 
+            return res.status(403).json({
+                success: false,
+                message: 'You do not have permission to delete contacts'
             });
         }
 
         const contact = await CRMContact.findById(req.params.id);
-        
+
         if (!contact) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Contact not found' 
+            return res.status(404).json({
+                success: false,
+                message: 'Contact not found'
             });
         }
 
         await Activity.deleteMany({ relatedTo: contact._id, relatedModel: 'CRMContact' });
         await CRMContact.findByIdAndDelete(req.params.id);
-        
-        res.json({ 
-            success: true, 
-            message: 'Contact deleted successfully' 
+
+        res.json({
+            success: true,
+            message: 'Contact deleted successfully'
         });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -1123,17 +1123,17 @@ router.delete('/contacts/:id', protect, async (req, res) => {
 // Get all activities
 router.get('/activities', protect, async (req, res) => {
     try {
-        const { 
-            type, 
+        const {
+            type,
             completed,
-            page = 1, 
+            page = 1,
             limit = 20,
             sortBy = 'dueDate',
             sortOrder = 'asc'
         } = req.query;
-        
+
         let query = { assignedTo: req.user._id };
-        
+
         if (type && type !== 'all') {
             query.type = type;
         }
@@ -1185,8 +1185,8 @@ router.post('/activities', protect, async (req, res) => {
             .populate('relatedTo')
             .populate('assignedTo', 'fullName');
 
-        res.status(201).json({ 
-            success: true, 
+        res.status(201).json({
+            success: true,
             data: populatedActivity,
             message: 'Activity created successfully'
         });
@@ -1199,11 +1199,11 @@ router.post('/activities', protect, async (req, res) => {
 router.put('/activities/:id', protect, async (req, res) => {
     try {
         let activity = await Activity.findById(req.params.id);
-        
+
         if (!activity) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Activity not found' 
+            return res.status(404).json({
+                success: false,
+                message: 'Activity not found'
             });
         }
 
@@ -1217,10 +1217,10 @@ router.put('/activities/:id', protect, async (req, res) => {
             { ...req.body, updatedAt: Date.now() },
             { new: true, runValidators: true }
         ).populate('relatedTo')
-         .populate('assignedTo', 'fullName');
+            .populate('assignedTo', 'fullName');
 
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             data: activity,
             message: 'Activity updated successfully'
         });
@@ -1233,19 +1233,19 @@ router.put('/activities/:id', protect, async (req, res) => {
 router.delete('/activities/:id', protect, async (req, res) => {
     try {
         const activity = await Activity.findById(req.params.id);
-        
+
         if (!activity) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Activity not found' 
+            return res.status(404).json({
+                success: false,
+                message: 'Activity not found'
             });
         }
 
         await Activity.findByIdAndDelete(req.params.id);
-        
-        res.json({ 
-            success: true, 
-            message: 'Activity deleted successfully' 
+
+        res.json({
+            success: true,
+            message: 'Activity deleted successfully'
         });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -1257,23 +1257,23 @@ router.patch('/activities/:id/complete', protect, async (req, res) => {
     try {
         const activity = await Activity.findByIdAndUpdate(
             req.params.id,
-            { 
-                completed: true, 
+            {
+                completed: true,
                 completedAt: new Date(),
-                outcome: req.body.outcome 
+                outcome: req.body.outcome
             },
             { new: true }
         ).populate('relatedTo');
 
         if (!activity) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Activity not found' 
+            return res.status(404).json({
+                success: false,
+                message: 'Activity not found'
             });
         }
 
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             data: activity,
             message: 'Activity marked as complete'
         });
@@ -1289,33 +1289,33 @@ router.patch('/activities/:id/complete', protect, async (req, res) => {
 // Get all meetings
 router.get('/meetings', protect, async (req, res) => {
     try {
-        const { 
-            status, 
-            startDate, 
-            endDate, 
+        const {
+            status,
+            startDate,
+            endDate,
             search,
-            page = 1, 
-            limit = 10 
+            page = 1,
+            limit = 10
         } = req.query;
-        
+
         let query = { host: req.user._id };
-        
+
         // Also include meetings where user is a participant
         const role = req.user.role?.toUpperCase();
         if (['ADMIN', 'MANAGER', 'HR'].includes(role)) {
             query = {};
         }
-        
+
         if (status && status !== 'all') {
             query.status = status;
         }
-        
+
         if (startDate || endDate) {
             query.startDate = {};
             if (startDate) query.startDate.$gte = new Date(startDate);
             if (endDate) query.startDate.$lte = new Date(endDate);
         }
-        
+
         if (search) {
             query.$or = [
                 { title: { $regex: search, $options: 'i' } },
@@ -1356,7 +1356,7 @@ router.get('/meetings/:id', protect, async (req, res) => {
             .populate('host', 'fullName email avatar')
             .populate('participants.user', 'fullName email')
             .populate('relatedTo');
-        
+
         if (!meeting) {
             return res.status(404).json({ success: false, message: 'Meeting not found' });
         }
@@ -1384,8 +1384,8 @@ router.post('/meetings', protect, async (req, res) => {
             .populate('host', 'fullName email avatar')
             .populate('participants.user', 'fullName email');
 
-        res.status(201).json({ 
-            success: true, 
+        res.status(201).json({
+            success: true,
             data: populatedMeeting,
             message: 'Meeting scheduled successfully'
         });
@@ -1406,8 +1406,8 @@ router.put('/meetings/:id', protect, async (req, res) => {
             { ...req.body, updatedAt: Date.now() },
             { new: true, runValidators: true }
         )
-        .populate('host', 'fullName email avatar')
-        .populate('participants.user', 'fullName email');
+            .populate('host', 'fullName email avatar')
+            .populate('participants.user', 'fullName email');
 
         if (!meeting) {
             return res.status(404).json({ success: false, message: 'Meeting not found' });
@@ -1427,7 +1427,7 @@ router.delete('/meetings/:id', protect, async (req, res) => {
         }
 
         const meeting = await Meeting.findByIdAndDelete(req.params.id);
-        
+
         if (!meeting) {
             return res.status(404).json({ success: false, message: 'Meeting not found' });
         }
@@ -1442,7 +1442,7 @@ router.delete('/meetings/:id', protect, async (req, res) => {
 router.patch('/meetings/:id/status', protect, async (req, res) => {
     try {
         const { status, outcome } = req.body;
-        
+
         const meeting = await Meeting.findByIdAndUpdate(
             req.params.id,
             { status, outcome, updatedAt: Date.now() },
@@ -1470,9 +1470,9 @@ router.get('/meetings/upcoming/list', protect, async (req, res) => {
             startDate: { $gte: new Date() },
             status: { $in: ['scheduled', 'rescheduled'] }
         })
-        .populate('host', 'fullName email')
-        .sort({ startDate: 1 })
-        .limit(10);
+            .populate('host', 'fullName email')
+            .sort({ startDate: 1 })
+            .limit(10);
 
         res.json({ success: true, data: meetings });
     } catch (error) {
@@ -1487,32 +1487,32 @@ router.get('/meetings/upcoming/list', protect, async (req, res) => {
 // Get all calls
 router.get('/calls', protect, async (req, res) => {
     try {
-        const { 
-            status, 
+        const {
+            status,
             callType,
-            startDate, 
-            endDate, 
+            startDate,
+            endDate,
             search,
-            page = 1, 
-            limit = 10 
+            page = 1,
+            limit = 10
         } = req.query;
-        
+
         let query = await buildRoleQuery(req.user, 'caller');
-        
+
         if (status && status !== 'all') {
             query.status = status;
         }
-        
+
         if (callType && callType !== 'all') {
             query.callType = callType;
         }
-        
+
         if (startDate || endDate) {
             query.startTime = {};
             if (startDate) query.startTime.$gte = new Date(startDate);
             if (endDate) query.startTime.$lte = new Date(endDate);
         }
-        
+
         if (search) {
             query.$or = [
                 { subject: { $regex: search, $options: 'i' } },
@@ -1552,7 +1552,7 @@ router.get('/calls/:id', protect, async (req, res) => {
         const call = await Call.findById(req.params.id)
             .populate('caller', 'fullName email avatar')
             .populate('relatedTo');
-        
+
         if (!call) {
             return res.status(404).json({ success: false, message: 'Call not found' });
         }
@@ -1587,8 +1587,8 @@ router.post('/calls', protect, async (req, res) => {
             .populate('caller', 'fullName email avatar')
             .populate('relatedTo');
 
-        res.status(201).json({ 
-            success: true, 
+        res.status(201).json({
+            success: true,
             data: populatedCall,
             message: 'Call logged successfully'
         });
@@ -1616,8 +1616,8 @@ router.put('/calls/:id', protect, async (req, res) => {
             { ...req.body, updatedAt: Date.now() },
             { new: true, runValidators: true }
         )
-        .populate('caller', 'fullName email avatar')
-        .populate('relatedTo');
+            .populate('caller', 'fullName email avatar')
+            .populate('relatedTo');
 
         if (!call) {
             return res.status(404).json({ success: false, message: 'Call not found' });
@@ -1637,7 +1637,7 @@ router.delete('/calls/:id', protect, async (req, res) => {
         }
 
         const call = await Call.findByIdAndDelete(req.params.id);
-        
+
         if (!call) {
             return res.status(404).json({ success: false, message: 'Call not found' });
         }
@@ -1654,7 +1654,7 @@ router.get('/calls/stats/summary', protect, async (req, res) => {
         const userId = req.user._id;
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        
+
         const thisWeek = new Date(today);
         thisWeek.setDate(thisWeek.getDate() - 7);
 
@@ -1694,39 +1694,39 @@ router.get('/calls/stats/summary', protect, async (req, res) => {
 // Get all products
 router.get('/products', protect, async (req, res) => {
     try {
-        const { 
-            category, 
+        const {
+            category,
             type,
             isActive,
             search,
             minPrice,
             maxPrice,
-            page = 1, 
+            page = 1,
             limit = 10,
             sortBy = 'createdAt',
             sortOrder = 'desc'
         } = req.query;
-        
+
         let query = {};
-        
+
         if (category && category !== 'all') {
             query.category = category;
         }
-        
+
         if (type && type !== 'all') {
             query.type = type;
         }
-        
+
         if (isActive !== undefined) {
             query.isActive = isActive === 'true';
         }
-        
+
         if (minPrice || maxPrice) {
             query.unitPrice = {};
             if (minPrice) query.unitPrice.$gte = parseFloat(minPrice);
             if (maxPrice) query.unitPrice.$lte = parseFloat(maxPrice);
         }
-        
+
         if (search) {
             query.$or = [
                 { name: { $regex: search, $options: 'i' } },
@@ -1772,7 +1772,7 @@ router.get('/products/:id', protect, async (req, res) => {
     try {
         const product = await Product.findById(req.params.id)
             .populate('createdBy', 'fullName email');
-        
+
         if (!product) {
             return res.status(404).json({ success: false, message: 'Product not found' });
         }
@@ -1800,16 +1800,16 @@ router.post('/products', protect, async (req, res) => {
         const populatedProduct = await Product.findById(product._id)
             .populate('createdBy', 'fullName email');
 
-        res.status(201).json({ 
-            success: true, 
+        res.status(201).json({
+            success: true,
             data: populatedProduct,
             message: 'Product created successfully'
         });
     } catch (error) {
         if (error.code === 11000) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Product code already exists' 
+            return res.status(400).json({
+                success: false,
+                message: 'Product code already exists'
             });
         }
         res.status(500).json({ success: false, message: error.message });
@@ -1849,7 +1849,7 @@ router.delete('/products/:id', protect, async (req, res) => {
         }
 
         const product = await Product.findByIdAndDelete(req.params.id);
-        
+
         if (!product) {
             return res.status(404).json({ success: false, message: 'Product not found' });
         }
@@ -1864,7 +1864,7 @@ router.delete('/products/:id', protect, async (req, res) => {
 router.patch('/products/:id/toggle-active', protect, async (req, res) => {
     try {
         const product = await Product.findById(req.params.id);
-        
+
         if (!product) {
             return res.status(404).json({ success: false, message: 'Product not found' });
         }
@@ -1872,8 +1872,8 @@ router.patch('/products/:id/toggle-active', protect, async (req, res) => {
         product.isActive = !product.isActive;
         await product.save();
 
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             data: product,
             message: `Product ${product.isActive ? 'activated' : 'deactivated'}`
         });
@@ -1902,29 +1902,29 @@ router.get('/products/list/active', protect, async (req, res) => {
 // Get all quotes
 router.get('/quotes', protect, async (req, res) => {
     try {
-        const { 
-            status, 
+        const {
+            status,
             search,
             startDate,
             endDate,
-            page = 1, 
+            page = 1,
             limit = 10,
             sortBy = 'createdAt',
             sortOrder = 'desc'
         } = req.query;
-        
+
         let query = await buildRoleQuery(req.user, 'owner');
-        
+
         if (status && status !== 'all') {
             query.status = status;
         }
-        
+
         if (startDate || endDate) {
             query.createdAt = {};
             if (startDate) query.createdAt.$gte = new Date(startDate);
             if (endDate) query.createdAt.$lte = new Date(endDate);
         }
-        
+
         if (search) {
             query.$or = [
                 { title: { $regex: search, $options: 'i' } },
@@ -1970,7 +1970,7 @@ router.get('/quotes/:id', protect, async (req, res) => {
             .populate('deal', 'title value stage')
             .populate('account', 'name')
             .populate('items.product', 'name code');
-        
+
         if (!quote) {
             return res.status(404).json({ success: false, message: 'Quote not found' });
         }
@@ -1999,8 +1999,8 @@ router.post('/quotes', protect, async (req, res) => {
             .populate('contact', 'firstName lastName email')
             .populate('items.product', 'name code');
 
-        res.status(201).json({ 
-            success: true, 
+        res.status(201).json({
+            success: true,
             data: populatedQuote,
             message: 'Quote created successfully'
         });
@@ -2017,7 +2017,7 @@ router.put('/quotes/:id', protect, async (req, res) => {
         }
 
         let quote = await Quote.findById(req.params.id);
-        
+
         if (!quote) {
             return res.status(404).json({ success: false, message: 'Quote not found' });
         }
@@ -2045,7 +2045,7 @@ router.delete('/quotes/:id', protect, async (req, res) => {
         }
 
         const quote = await Quote.findByIdAndDelete(req.params.id);
-        
+
         if (!quote) {
             return res.status(404).json({ success: false, message: 'Quote not found' });
         }
@@ -2060,9 +2060,9 @@ router.delete('/quotes/:id', protect, async (req, res) => {
 router.patch('/quotes/:id/status', protect, async (req, res) => {
     try {
         const { status } = req.body;
-        
+
         const updateData = { status, updatedAt: Date.now() };
-        
+
         // If accepted, set accepted date
         if (status === 'accepted') {
             updateData.acceptedDate = new Date();
@@ -2073,8 +2073,8 @@ router.patch('/quotes/:id/status', protect, async (req, res) => {
             updateData,
             { new: true }
         )
-        .populate('owner', 'fullName email')
-        .populate('contact', 'firstName lastName email');
+            .populate('owner', 'fullName email')
+            .populate('contact', 'firstName lastName email');
 
         if (!quote) {
             return res.status(404).json({ success: false, message: 'Quote not found' });
@@ -2090,7 +2090,7 @@ router.patch('/quotes/:id/status', protect, async (req, res) => {
 router.post('/quotes/:id/clone', protect, async (req, res) => {
     try {
         const originalQuote = await Quote.findById(req.params.id);
-        
+
         if (!originalQuote) {
             return res.status(404).json({ success: false, message: 'Quote not found' });
         }
@@ -2100,7 +2100,7 @@ router.post('/quotes/:id/clone', protect, async (req, res) => {
         delete quoteData.quoteNumber;
         delete quoteData.createdAt;
         delete quoteData.updatedAt;
-        
+
         quoteData.status = 'draft';
         quoteData.version = originalQuote.version + 1;
         quoteData.parentQuote = originalQuote._id;
@@ -2119,8 +2119,8 @@ router.post('/quotes/:id/clone', protect, async (req, res) => {
             .populate('owner', 'fullName email')
             .populate('contact', 'firstName lastName email');
 
-        res.status(201).json({ 
-            success: true, 
+        res.status(201).json({
+            success: true,
             data: populatedQuote,
             message: 'Quote cloned successfully'
         });
@@ -2169,15 +2169,15 @@ router.post('/quotes/:id/convert-to-deal', protect, async (req, res) => {
     try {
         const quote = await Quote.findById(req.params.id)
             .populate('contact');
-        
+
         if (!quote) {
             return res.status(404).json({ success: false, message: 'Quote not found' });
         }
 
         if (quote.deal) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Quote already linked to a deal' 
+            return res.status(400).json({
+                success: false,
+                message: 'Quote already linked to a deal'
             });
         }
 
@@ -2203,8 +2203,8 @@ router.post('/quotes/:id/convert-to-deal', protect, async (req, res) => {
             .populate('owner', 'fullName email')
             .populate('contact', 'firstName lastName email');
 
-        res.status(201).json({ 
-            success: true, 
+        res.status(201).json({
+            success: true,
             data: { quote, deal: populatedDeal },
             message: 'Deal created from quote'
         });
@@ -2221,7 +2221,7 @@ router.post('/quotes/:id/convert-to-deal', protect, async (req, res) => {
 router.get('/reports/sales-performance', protect, async (req, res) => {
     try {
         const { startDate, endDate, groupBy = 'month' } = req.query;
-        
+
         const dateMatch = {};
         if (startDate) dateMatch.$gte = new Date(startDate);
         if (endDate) dateMatch.$lte = new Date(endDate);
@@ -2231,11 +2231,11 @@ router.get('/reports/sales-performance', protect, async (req, res) => {
             query.createdAt = dateMatch;
         }
 
-        const groupByFormat = groupBy === 'day' 
+        const groupByFormat = groupBy === 'day'
             ? { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }
             : groupBy === 'week'
-            ? { $week: '$createdAt' }
-            : { $dateToString: { format: '%Y-%m', date: '$createdAt' } };
+                ? { $week: '$createdAt' }
+                : { $dateToString: { format: '%Y-%m', date: '$createdAt' } };
 
         const salesData = await Deal.aggregate([
             { $match: { ...query, stage: 'closed_won' } },
@@ -2276,7 +2276,7 @@ router.get('/reports/sales-performance', protect, async (req, res) => {
 router.get('/reports/leaderboard', protect, async (req, res) => {
     try {
         const role = req.user.role?.toUpperCase();
-        
+
         if (!['ADMIN', 'MANAGER', 'HR'].includes(role)) {
             return res.status(403).json({
                 success: false,
@@ -2289,11 +2289,11 @@ router.get('/reports/leaderboard', protect, async (req, res) => {
         currentMonth.setHours(0, 0, 0, 0);
 
         const leaderboard = await Deal.aggregate([
-            { 
-                $match: { 
+            {
+                $match: {
                     stage: 'closed_won',
                     actualCloseDate: { $gte: currentMonth }
-                } 
+                }
             },
             {
                 $group: {
@@ -2333,12 +2333,60 @@ router.get('/reports/leaderboard', protect, async (req, res) => {
     }
 });
 
+// Summary statistics for reports
+router.get('/reports/summary-stats', protect, async (req, res) => {
+    try {
+        let query = await buildRoleQuery(req.user, 'owner');
+
+        const [revenueData, activeDeals, totalClosed, newLeads] = await Promise.all([
+            // Total Revenue
+            Deal.aggregate([
+                { $match: { ...query, stage: 'closed_won' } },
+                { $group: { _id: null, total: { $sum: '$value' } } }
+            ]),
+            // Active Deals (In Pipeline)
+            Deal.countDocuments({
+                ...query,
+                stage: { $nin: ['closed_won', 'closed_lost'] }
+            }),
+            // Total Closed Deals (for win rate)
+            Deal.aggregate([
+                { $match: { ...query, stage: { $in: ['closed_won', 'closed_lost'] } } },
+                { $group: { _id: '$stage', count: { $sum: 1 } } }
+            ]),
+            // New Leads
+            Lead.countDocuments({
+                ...await buildRoleQuery(req.user),
+                status: 'new'
+            })
+        ]);
+
+        const wonCount = totalClosed.find(t => t._id === 'closed_won')?.count || 0;
+        const lostCount = totalClosed.find(t => t._id === 'closed_lost')?.count || 0;
+        const totalClosedCount = wonCount + lostCount;
+        const winRate = totalClosedCount > 0 ? Math.round((wonCount / totalClosedCount) * 100) : 0;
+
+        res.json({
+            success: true,
+            data: {
+                totalRevenue: revenueData[0]?.total || 0,
+                activeDeals,
+                newLeads,
+                winRate,
+                dealVelocity: 15 // Placeholder for now or calculate if actualCloseDate exists
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 // ============================================
 // USERS FOR ASSIGNMENT
 // ============================================
 router.get('/users/assignable', protect, async (req, res) => {
     try {
-        const users = await User.find({ 
+        const users = await User.find({
             isActive: { $ne: false },
             role: { $in: ['ADMIN', 'MANAGER', 'HR', 'EMPLOYEE', 'SALES'] }
         }).select('_id fullName email avatar role');

@@ -3,7 +3,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 import CRMLayout from '../../components/crm/CRMLayout';
 import {
     Plus, Search, Edit2, Trash2, X, ChevronLeft, ChevronRight,
@@ -11,7 +11,7 @@ import {
     Box, Layers
 } from 'lucide-react';
 
-const API_BASE = import.meta.env.VITE_API_URL || '';
+// Redundant API_BASE removed
 
 const Products = () => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -47,9 +47,7 @@ const Products = () => {
     const fetchProducts = useCallback(async () => {
         try {
             setLoading(true);
-            const token = localStorage.getItem('token');
-            const { data } = await axios.get(`${API_BASE}/api/crm/products`, {
-                headers: { Authorization: `Bearer ${token}` },
+            const { data } = await api.get('/crm/products', {
                 params: {
                     search: searchQuery,
                     category: categoryFilter,
@@ -59,7 +57,7 @@ const Products = () => {
                     limit: 12
                 }
             });
-            
+
             if (data.success) {
                 setProducts(data.data.products);
                 setCategories(data.data.categories || []);
@@ -83,7 +81,7 @@ const Products = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitLoading(true);
-        
+
         try {
             const token = localStorage.getItem('token');
             const submitData = {
@@ -95,15 +93,11 @@ const Products = () => {
             };
 
             if (editingProduct) {
-                await axios.put(`${API_BASE}/api/crm/products/${editingProduct._id}`, submitData, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                await api.put(`/crm/products/${editingProduct._id}`, submitData);
             } else {
-                await axios.post(`${API_BASE}/api/crm/products`, submitData, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                await api.post('/crm/products', submitData);
             }
-            
+
             setModalOpen(false);
             setEditingProduct(null);
             resetForm();
@@ -137,12 +131,9 @@ const Products = () => {
 
     const handleDelete = async (id) => {
         if (!window.confirm('Are you sure you want to delete this product?')) return;
-        
+
         try {
-            const token = localStorage.getItem('token');
-            await axios.delete(`${API_BASE}/api/crm/products/${id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await api.delete(`/crm/products/${id}`);
             fetchProducts();
         } catch (error) {
             console.error('Error deleting product:', error);
@@ -152,10 +143,7 @@ const Products = () => {
 
     const handleToggleActive = async (product) => {
         try {
-            const token = localStorage.getItem('token');
-            await axios.patch(`${API_BASE}/api/crm/products/${product._id}/toggle-active`, {}, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await api.patch(`/crm/products/${product._id}/toggle-active`, {});
             fetchProducts();
         } catch (error) {
             console.error('Error toggling product status:', error);
@@ -306,22 +294,22 @@ const Products = () => {
                                         </div>
                                     )}
                                 </div>
-                                
+
                                 <h3 className="font-semibold text-gray-800 mb-1 line-clamp-1">{product.name}</h3>
                                 <p className="text-sm text-gray-500 mb-3">{product.code}</p>
-                                
+
                                 <div className="flex items-center justify-between mb-2">
                                     <span className="text-sm text-gray-500">Unit Price</span>
                                     <span className="text-lg font-bold text-gray-800">${product.unitPrice?.toLocaleString()}</span>
                                 </div>
-                                
+
                                 <div className="flex items-center justify-between text-sm">
                                     <span className="text-gray-500">Type</span>
                                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${typeColors[product.type]}`}>
                                         {product.type}
                                     </span>
                                 </div>
-                                
+
                                 {product.category && (
                                     <div className="flex items-center gap-1 mt-3 pt-3 border-t border-gray-100">
                                         <Tag size={14} className="text-gray-400" />

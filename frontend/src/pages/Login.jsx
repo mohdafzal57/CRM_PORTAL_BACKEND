@@ -27,17 +27,21 @@ const Login = () => {
     if (isAuthenticated()) {
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       if (user && user.role) {
-        if (user.role === 'ADMIN') navigate('/admin/dashboard');
-        else if (user.role === 'EMPLOYEE') navigate('/employee/dashboard');
-
-        else navigate(`/${user.role.toLowerCase()}/dashboard`);
+        const role = user.role.toUpperCase();
+        if (role === 'ADMIN') navigate('/admin');
+        else if (role === 'HR') navigate('/hr');
+        else if (role === 'EMPLOYEE') navigate('/employee/dashboard');
+        else if (role === 'INTERN') navigate('/intern/dashboard');
+        else if (role === 'MANAGER') navigate('/manager/dashboard');
+        else if (role === 'SALES') navigate('/crm');
+        else navigate('/login');
       } else {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
       }
     }
   }, [navigate]);
-  
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -58,38 +62,37 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
-  
+
     setLoading(true);
     setApiError('');
-  
+
     try {
       const loginFn = loginType === 'admin' ? adminLogin : employeeLogin;
       const response = await loginFn({
         email: formData.email.toLowerCase().trim(),
         password: formData.password,
       });
-  
+
       if (response.success) {
         saveAuthData(response.data.token, response.data.user);
-  
-        const role = response.data.user.role;
-  
-        if (role === "EMPLOYEE") {
-          navigate("/employee/dashboard");
-        } else if (role === "ADMIN") {
-          navigate("/admin/dashboard");
-        } else {
-          navigate(`/${role.toLowerCase()}/dashboard`);
-        }
+
+        const role = response.data.user.role.toUpperCase();
+        if (role === "ADMIN") navigate("/admin");
+        else if (role === "HR") navigate("/hr");
+        else if (role === "EMPLOYEE") navigate("/employee/dashboard");
+        else if (role === "INTERN") navigate("/intern/dashboard");
+        else if (role === "MANAGER") navigate("/manager/dashboard");
+        else if (role === "SALES") navigate("/crm");
+        else navigate("/login");
       }
-  
+
     } catch (error) {
       setApiError(error.message || 'Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
     }
   };
-  
+
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-slate-50 flex items-center justify-center p-4">
@@ -134,15 +137,23 @@ const Login = () => {
                 </li>
               </ul>
             </div>
-            <p className="text-xs text-indigo-300">© 2024 CRM Portal. Secure & Reliable.</p>
+            <p className="text-xs text-indigo-300">© 2026 CRM Portal. Secure & Reliable.</p>
           </div>
         </div>
 
         {/* Right Side - Form */}
         <div className="md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-white/50">
-          <div className="mb-8">
-            <h2 className="text-3xl font-[900] text-slate-800 tracking-tight mb-2">Welcome Back</h2>
-            <p className="text-slate-500">Please sign in to your account</p>
+          <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-3xl font-[900] text-slate-800 tracking-tight mb-2">Welcome Back</h2>
+              <p className="text-slate-500">Please sign in to your account</p>
+            </div>
+            <Link
+              to="/crm/login"
+              className="px-6 py-3 bg-white border-2 border-indigo-600 text-indigo-600 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all shadow-lg shadow-indigo-600/10 flex items-center gap-2 whitespace-nowrap"
+            >
+              Sales Portal <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
 
           {/* Type Toggle */}

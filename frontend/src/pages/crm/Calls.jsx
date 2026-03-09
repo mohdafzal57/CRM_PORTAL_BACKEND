@@ -3,7 +3,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 import CRMLayout from '../../components/crm/CRMLayout';
 import {
     Plus, Search, Edit2, Trash2, X, ChevronLeft, ChevronRight,
@@ -11,7 +11,7 @@ import {
     RefreshCw, User, Calendar
 } from 'lucide-react';
 
-const API_BASE = import.meta.env.VITE_API_URL || '';
+// Redundant API_BASE removed
 
 const Calls = () => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -47,9 +47,7 @@ const Calls = () => {
     const fetchCalls = useCallback(async () => {
         try {
             setLoading(true);
-            const token = localStorage.getItem('token');
-            const { data } = await axios.get(`${API_BASE}/api/crm/calls`, {
-                headers: { Authorization: `Bearer ${token}` },
+            const { data } = await api.get('/crm/calls', {
                 params: {
                     search: searchQuery,
                     status: statusFilter,
@@ -58,7 +56,7 @@ const Calls = () => {
                     limit: 10
                 }
             });
-            
+
             if (data.success) {
                 setCalls(data.data.calls);
                 setPagination(prev => ({
@@ -81,7 +79,7 @@ const Calls = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitLoading(true);
-        
+
         try {
             const token = localStorage.getItem('token');
             const submitData = {
@@ -92,15 +90,11 @@ const Calls = () => {
             };
 
             if (editingCall) {
-                await axios.put(`${API_BASE}/api/crm/calls/${editingCall._id}`, submitData, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                await api.put(`/crm/calls/${editingCall._id}`, submitData);
             } else {
-                await axios.post(`${API_BASE}/api/crm/calls`, submitData, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                await api.post('/crm/calls', submitData);
             }
-            
+
             setModalOpen(false);
             setEditingCall(null);
             resetForm();
@@ -135,12 +129,9 @@ const Calls = () => {
 
     const handleDelete = async (id) => {
         if (!window.confirm('Are you sure you want to delete this call log?')) return;
-        
+
         try {
-            const token = localStorage.getItem('token');
-            await axios.delete(`${API_BASE}/api/crm/calls/${id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await api.delete(`/crm/calls/${id}`);
             fetchCalls();
         } catch (error) {
             console.error('Error deleting call:', error);

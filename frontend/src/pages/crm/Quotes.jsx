@@ -3,7 +3,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 import CRMLayout from '../../components/crm/CRMLayout';
 import {
     Plus, Search, Edit2, Trash2, X, ChevronLeft, ChevronRight,
@@ -11,7 +11,7 @@ import {
     CheckCircle, XCircle, Send, Download, Minus, User
 } from 'lucide-react';
 
-const API_BASE = import.meta.env.VITE_API_URL || '';
+// Redundant API_BASE removed
 
 const Quotes = () => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -54,9 +54,7 @@ const Quotes = () => {
     const fetchQuotes = useCallback(async () => {
         try {
             setLoading(true);
-            const token = localStorage.getItem('token');
-            const { data } = await axios.get(`${API_BASE}/api/crm/quotes`, {
-                headers: { Authorization: `Bearer ${token}` },
+            const { data } = await api.get('/crm/quotes', {
                 params: {
                     search: searchQuery,
                     status: statusFilter,
@@ -64,7 +62,7 @@ const Quotes = () => {
                     limit: 10
                 }
             });
-            
+
             if (data.success) {
                 setQuotes(data.data.quotes);
                 setPagination(prev => ({
@@ -87,10 +85,7 @@ const Quotes = () => {
 
     const fetchProducts = async () => {
         try {
-            const token = localStorage.getItem('token');
-            const { data } = await axios.get(`${API_BASE}/api/crm/products/list/active`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const { data } = await api.get('/crm/products/list/active');
             if (data.success) {
                 setProducts(data.data);
             }
@@ -102,10 +97,10 @@ const Quotes = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitLoading(true);
-        
+
         try {
             const token = localStorage.getItem('token');
-            
+
             // Calculate item totals
             const items = formData.items.map(item => {
                 const subtotal = item.quantity * item.unitPrice;
@@ -126,15 +121,11 @@ const Quotes = () => {
             };
 
             if (editingQuote) {
-                await axios.put(`${API_BASE}/api/crm/quotes/${editingQuote._id}`, submitData, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                await api.put(`/crm/quotes/${editingQuote._id}`, submitData);
             } else {
-                await axios.post(`${API_BASE}/api/crm/quotes`, submitData, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                await api.post('/crm/quotes', submitData);
             }
-            
+
             setModalOpen(false);
             setEditingQuote(null);
             resetForm();
@@ -149,10 +140,7 @@ const Quotes = () => {
 
     const handleView = async (quote) => {
         try {
-            const token = localStorage.getItem('token');
-            const { data } = await axios.get(`${API_BASE}/api/crm/quotes/${quote._id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const { data } = await api.get(`/crm/quotes/${quote._id}`);
             if (data.success) {
                 setViewingQuote(data.data);
                 setViewModalOpen(true);
@@ -198,12 +186,9 @@ const Quotes = () => {
 
     const handleDelete = async (id) => {
         if (!window.confirm('Are you sure you want to delete this quote?')) return;
-        
+
         try {
-            const token = localStorage.getItem('token');
-            await axios.delete(`${API_BASE}/api/crm/quotes/${id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await api.delete(`/crm/quotes/${id}`);
             fetchQuotes();
         } catch (error) {
             console.error('Error deleting quote:', error);
@@ -213,11 +198,7 @@ const Quotes = () => {
 
     const handleStatusChange = async (id, newStatus) => {
         try {
-            const token = localStorage.getItem('token');
-            await axios.patch(`${API_BASE}/api/crm/quotes/${id}/status`, 
-                { status: newStatus },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
+            await api.patch(`/crm/quotes/${id}/status`, { status: newStatus });
             fetchQuotes();
         } catch (error) {
             console.error('Error updating status:', error);
@@ -227,12 +208,9 @@ const Quotes = () => {
 
     const handleClone = async (id) => {
         if (!window.confirm('Create a new revision of this quote?')) return;
-        
+
         try {
-            const token = localStorage.getItem('token');
-            await axios.post(`${API_BASE}/api/crm/quotes/${id}/clone`, {}, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await api.post(`/crm/quotes/${id}/clone`);
             fetchQuotes();
         } catch (error) {
             console.error('Error cloning quote:', error);
@@ -242,12 +220,9 @@ const Quotes = () => {
 
     const handleConvertToDeal = async (id) => {
         if (!window.confirm('Convert this quote to a deal?')) return;
-        
+
         try {
-            const token = localStorage.getItem('token');
-            await axios.post(`${API_BASE}/api/crm/quotes/${id}/convert-to-deal`, {}, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await api.post(`/crm/quotes/${id}/convert-to-deal`);
             fetchQuotes();
             alert('Deal created successfully!');
         } catch (error) {
@@ -259,7 +234,7 @@ const Quotes = () => {
     const resetForm = () => {
         const futureDate = new Date();
         futureDate.setDate(futureDate.getDate() + 30);
-        
+
         setFormData({
             title: '',
             status: 'draft',
@@ -513,7 +488,7 @@ const Quotes = () => {
                                                     >
                                                         <Eye size={16} className="text-gray-500" />
                                                     </button>
-                                                    
+
                                                     {quote.status === 'draft' && canWrite && (
                                                         <button
                                                             onClick={() => handleStatusChange(quote._id, 'sent')}
@@ -523,7 +498,7 @@ const Quotes = () => {
                                                             <Send size={16} className="text-blue-500" />
                                                         </button>
                                                     )}
-                                                    
+
                                                     {quote.status === 'sent' && canWrite && (
                                                         <>
                                                             <button
@@ -542,7 +517,7 @@ const Quotes = () => {
                                                             </button>
                                                         </>
                                                     )}
-                                                    
+
                                                     {quote.status === 'accepted' && canWrite && !quote.deal && (
                                                         <button
                                                             onClick={() => handleConvertToDeal(quote._id)}
@@ -552,7 +527,7 @@ const Quotes = () => {
                                                             <DollarSign size={16} className="text-green-500" />
                                                         </button>
                                                     )}
-                                                    
+
                                                     {canWrite && (
                                                         <button
                                                             onClick={() => handleClone(quote._id)}
@@ -562,7 +537,7 @@ const Quotes = () => {
                                                             <Copy size={16} className="text-gray-500" />
                                                         </button>
                                                     )}
-                                                    
+
                                                     {canWrite && quote.status === 'draft' && (
                                                         <button
                                                             onClick={() => handleEdit(quote)}
@@ -572,7 +547,7 @@ const Quotes = () => {
                                                             <Edit2 size={16} className="text-gray-500" />
                                                         </button>
                                                     )}
-                                                    
+
                                                     {canDelete && (
                                                         <button
                                                             onClick={() => handleDelete(quote._id)}
@@ -722,7 +697,7 @@ const Quotes = () => {
                                             Add Item
                                         </button>
                                     </div>
-                                    
+
                                     <div className="border border-gray-200 rounded-xl overflow-hidden">
                                         {/* Table Header */}
                                         <div className="grid grid-cols-12 gap-2 p-3 bg-gray-50 text-xs font-medium text-gray-500 uppercase">
@@ -734,7 +709,7 @@ const Quotes = () => {
                                             <div className="col-span-1 text-center">Tax%</div>
                                             <div className="col-span-1"></div>
                                         </div>
-                                        
+
                                         {/* Items */}
                                         {formData.items.map((item, index) => (
                                             <div key={index} className="grid grid-cols-12 gap-2 p-3 border-t border-gray-100 items-center">

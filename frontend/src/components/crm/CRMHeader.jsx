@@ -6,33 +6,34 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-    Search, 
-    Bell, 
-    Moon, 
-    Sun, 
-    ChevronDown, 
-    User, 
-    Settings, 
+import {
+    Search,
+    Bell,
+    Moon,
+    Sun,
+    ChevronDown,
+    User,
+    Settings,
     LogOut,
     HelpCircle,
-    Plus
+    Plus,
+    Menu
 } from 'lucide-react';
 
-const CRMHeader = () => {
+const CRMHeader = ({ onToggleSidebar, isSidebarCollapsed }) => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const navigate = useNavigate();
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [notificationOpen, setNotificationOpen] = useState(false);
     const [darkMode, setDarkMode] = useState(false);
-    
+
     const [notifications] = useState([
         { id: 1, text: 'New lead assigned to you', time: '5m ago', unread: true },
         { id: 2, text: 'Deal "Enterprise Plan" moved to negotiation', time: '1h ago', unread: true },
         { id: 3, text: 'Meeting reminder: Client call at 3 PM', time: '2h ago', unread: false },
     ]);
-    
+
     const dropdownRef = useRef(null);
     const notificationRef = useRef(null);
 
@@ -67,6 +68,14 @@ const CRMHeader = () => {
     return (
         <header className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-20">
             <div className="flex items-center justify-between px-4 lg:px-6 py-4">
+                {/* Sidebar Toggle */}
+                <button
+                    onClick={onToggleSidebar}
+                    className="p-2 mr-2 hidden lg:flex hover:bg-gray-100 rounded-lg transition-colors text-gray-500"
+                >
+                    <Menu size={20} />
+                </button>
+
                 {/* Search Bar */}
                 <form onSubmit={handleSearch} className="flex-1 max-w-xl ml-12 lg:ml-0">
                     <div className="relative">
@@ -87,7 +96,7 @@ const CRMHeader = () => {
                 {/* Right Section */}
                 <div className="flex items-center gap-2 lg:gap-4">
                     {/* Quick Add Button */}
-                    <button 
+                    <button
                         onClick={() => navigate('/crm/leads')}
                         className="hidden sm:flex items-center gap-2 px-4 py-2 
                                    bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors"
@@ -138,7 +147,7 @@ const CRMHeader = () => {
                                 </div>
                                 <div className="max-h-64 overflow-y-auto">
                                     {notifications.map((notif) => (
-                                        <div 
+                                        <div
                                             key={notif.id}
                                             className={`px-4 py-3 hover:bg-gray-50 cursor-pointer
                                                        ${notif.unread ? 'bg-blue-50/50' : ''}`}
@@ -193,23 +202,33 @@ const CRMHeader = () => {
                                             rounded-xl shadow-lg border border-gray-100
                                             py-2 z-50">
                                 <div className="px-4 py-3 border-b border-gray-100">
-                                    <p className="font-medium text-gray-800">{user?.fullName || user?.name}</p>
-                                    <p className="text-sm text-gray-500">{user?.email}</p>
+                                    <p className="font-medium text-gray-800">{user?.fullName || user?.name || 'User'}</p>
+                                    <p className="text-sm text-gray-500">{user?.email || 'puneetkushwaha94528@gmail.com'}</p>
                                 </div>
                                 <div className="py-1">
-                                    <button className="flex items-center gap-3 w-full px-4 py-2 text-left
+                                    <button
+                                        onClick={() => {
+                                            setDropdownOpen(false);
+                                            navigate('/crm/profile');
+                                        }}
+                                        className="flex items-center gap-3 w-full px-4 py-2 text-left
                                                        text-gray-700 hover:bg-gray-50">
                                         <User size={18} />
                                         <span>My Profile</span>
                                     </button>
-                                    <button className="flex items-center gap-3 w-full px-4 py-2 text-left
+                                    <button
+                                        onClick={() => {
+                                            setDropdownOpen(false);
+                                            navigate('/crm/settings');
+                                        }}
+                                        className="flex items-center gap-3 w-full px-4 py-2 text-left
                                                        text-gray-700 hover:bg-gray-50">
                                         <Settings size={18} />
                                         <span>Settings</span>
                                     </button>
                                 </div>
                                 <div className="border-t border-gray-100 py-1">
-                                    <button 
+                                    <button
                                         onClick={handleLogout}
                                         className="flex items-center gap-3 w-full px-4 py-2 text-left
                                                    text-red-500 hover:bg-red-50"

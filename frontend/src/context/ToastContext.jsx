@@ -29,10 +29,10 @@ export const ToastProvider = ({ children }) => {
         setToasts((prev) => prev.filter((toast) => toast.id !== id));
     }, []);
 
-    const success = (message, duration) => addToast(message, 'success', duration);
-    const error = (message, duration) => addToast(message, 'error', duration);
-    const info = (message, duration) => addToast(message, 'info', duration);
-    const warning = (message, duration) => addToast(message, 'warning', duration);
+    const success = useCallback((message, duration) => addToast(message, 'success', duration), [addToast]);
+    const error = useCallback((message, duration) => addToast(message, 'error', duration), [addToast]);
+    const info = useCallback((message, duration) => addToast(message, 'info', duration), [addToast]);
+    const warning = useCallback((message, duration) => addToast(message, 'warning', duration), [addToast]);
 
     return (
         <ToastContext.Provider value={{ addToast, removeToast, success, error, info, warning }}>
@@ -42,9 +42,9 @@ export const ToastProvider = ({ children }) => {
                     <div
                         key={toast.id}
                         className={`pointer-events-auto min-w-[300px] max-w-md bg-white/80 backdrop-blur-md border border-l-4 rounded-xl shadow-lg p-4 flex items-start gap-3 animate-in slide-in-from-right-full fade-in duration-300 ${toast.type === 'success' ? 'border-emerald-200 border-l-emerald-500' :
-                                toast.type === 'error' ? 'border-rose-200 border-l-rose-500' :
-                                    toast.type === 'warning' ? 'border-amber-200 border-l-amber-500' :
-                                        'border-indigo-200 border-l-indigo-500'
+                            toast.type === 'error' ? 'border-rose-200 border-l-rose-500' :
+                                toast.type === 'warning' ? 'border-amber-200 border-l-amber-500' :
+                                    'border-indigo-200 border-l-indigo-500'
                             }`}
                     >
                         <div className={`mt-0.5 shrink-0 ${toast.type === 'success' ? 'text-emerald-500' :

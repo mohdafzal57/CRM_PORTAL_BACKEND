@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 import CRMLayout from '../../components/crm/CRMLayout';
 import {
     Plus,
@@ -30,7 +30,7 @@ import {
     Tag
 } from 'lucide-react';
 
-const API_BASE = import.meta.env.VITE_API_URL || '';
+// Redundant API_BASE removed as 'api' service handles it
 
 const Leads = () => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -77,9 +77,7 @@ const Leads = () => {
     const fetchLeads = useCallback(async () => {
         try {
             setLoading(true);
-            const token = localStorage.getItem('token');
-            const { data } = await axios.get(`${API_BASE}/api/crm/leads`, {
-                headers: { Authorization: `Bearer ${token}` },
+            const { data } = await api.get('/crm/leads', {
                 params: {
                     search: debouncedSearch,
                     status: statusFilter,
@@ -90,7 +88,7 @@ const Leads = () => {
                     sortOrder
                 }
             });
-            
+
             if (data.success) {
                 setLeads(data.data.leads);
                 setPagination(prev => ({
@@ -114,7 +112,7 @@ const Leads = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitLoading(true);
-        
+
         try {
             const token = localStorage.getItem('token');
             const submitData = {
@@ -123,15 +121,11 @@ const Leads = () => {
             };
 
             if (editingLead) {
-                await axios.put(`${API_BASE}/api/crm/leads/${editingLead._id}`, submitData, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                await api.put(`/crm/leads/${editingLead._id}`, submitData);
             } else {
-                await axios.post(`${API_BASE}/api/crm/leads`, submitData, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                await api.post('/crm/leads', submitData);
             }
-            
+
             setModalOpen(false);
             setEditingLead(null);
             resetForm();
@@ -165,10 +159,7 @@ const Leads = () => {
     // Handle view button click
     const handleView = async (lead) => {
         try {
-            const token = localStorage.getItem('token');
-            const { data } = await axios.get(`${API_BASE}/api/crm/leads/${lead._id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const { data } = await api.get(`/crm/leads/${lead._id}`);
             if (data.success) {
                 setViewingLead(data.data);
                 setViewModalOpen(true);
@@ -184,12 +175,9 @@ const Leads = () => {
     // Handle delete
     const handleDelete = async (id) => {
         if (!window.confirm('Are you sure you want to delete this lead?')) return;
-        
+
         try {
-            const token = localStorage.getItem('token');
-            await axios.delete(`${API_BASE}/api/crm/leads/${id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await api.delete(`/crm/leads/${id}`);
             fetchLeads();
         } catch (error) {
             console.error('Error deleting lead:', error);
@@ -203,13 +191,8 @@ const Leads = () => {
         if (!window.confirm(`Delete ${selectedLeads.length} selected leads?`)) return;
 
         try {
-            const token = localStorage.getItem('token');
             await Promise.all(
-                selectedLeads.map(id => 
-                    axios.delete(`${API_BASE}/api/crm/leads/${id}`, {
-                        headers: { Authorization: `Bearer ${token}` }
-                    })
-                )
+                selectedLeads.map(id => api.delete(`/crm/leads/${id}`))
             );
             setSelectedLeads([]);
             fetchLeads();
@@ -256,7 +239,7 @@ const Leads = () => {
 
     // Toggle single select
     const toggleSelect = (id) => {
-        setSelectedLeads(prev => 
+        setSelectedLeads(prev =>
             prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
         );
     };
@@ -434,7 +417,7 @@ const Leads = () => {
                                                 className="rounded border-gray-300 text-blue-500 focus:ring-blue-500"
                                             />
                                         </th>
-                                        <th 
+                                        <th
                                             className="px-4 py-4 text-left text-xs font-semibold text-gray-500 
                                                        uppercase tracking-wider cursor-pointer hover:text-gray-700"
                                             onClick={() => toggleSort('name')}
@@ -450,7 +433,7 @@ const Leads = () => {
                                         <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                             Company
                                         </th>
-                                        <th 
+                                        <th
                                             className="px-4 py-4 text-left text-xs font-semibold text-gray-500 
                                                        uppercase tracking-wider cursor-pointer hover:text-gray-700"
                                             onClick={() => toggleSort('status')}
@@ -473,8 +456,8 @@ const Leads = () => {
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
                                     {leads.map((lead) => (
-                                        <tr 
-                                            key={lead._id} 
+                                        <tr
+                                            key={lead._id}
                                             className={`hover:bg-gray-50 transition-colors
                                                        ${selectedLeads.includes(lead._id) ? 'bg-blue-50' : ''}`}
                                         >
@@ -859,7 +842,7 @@ const Leads = () => {
                                         </h3>
                                         <p className="text-gray-500">
                                             {viewingLead.lead?.company || viewingLead.company || 'No company'}
-                                            {(viewingLead.lead?.position || viewingLead.position) && 
+                                            {(viewingLead.lead?.position || viewingLead.position) &&
                                                 ` • ${viewingLead.lead?.position || viewingLead.position}`}
                                         </p>
                                         <div className="flex items-center gap-2 mt-2">
@@ -928,11 +911,11 @@ const Leads = () => {
                                             <span className="text-sm">Assigned To</span>
                                         </div>
                                         <p className="font-medium text-gray-800">
-                                            {viewingLead.lead?.assignedTo?.fullName || 
-                                             viewingLead.assignedTo?.fullName || 
-                                             viewingLead.lead?.assignedTo?.name || 
-                                             viewingLead.assignedTo?.name || 
-                                             '-'}
+                                            {viewingLead.lead?.assignedTo?.fullName ||
+                                                viewingLead.assignedTo?.fullName ||
+                                                viewingLead.lead?.assignedTo?.name ||
+                                                viewingLead.assignedTo?.name ||
+                                                '-'}
                                         </p>
                                     </div>
                                 </div>
@@ -953,21 +936,20 @@ const Leads = () => {
                                         <h4 className="font-medium text-gray-700 mb-3">Recent Activities</h4>
                                         <div className="space-y-3">
                                             {viewingLead.activities.map((activity, index) => (
-                                                <div 
+                                                <div
                                                     key={activity._id || index}
                                                     className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl"
                                                 >
-                                                    <div className={`p-2 rounded-lg ${
-                                                        activity.type === 'call' ? 'bg-green-100' :
-                                                        activity.type === 'email' ? 'bg-blue-100' :
-                                                        activity.type === 'meeting' ? 'bg-purple-100' :
-                                                        'bg-gray-100'
-                                                    }`}>
+                                                    <div className={`p-2 rounded-lg ${activity.type === 'call' ? 'bg-green-100' :
+                                                            activity.type === 'email' ? 'bg-blue-100' :
+                                                                activity.type === 'meeting' ? 'bg-purple-100' :
+                                                                    'bg-gray-100'
+                                                        }`}>
                                                         <Phone size={16} className={
                                                             activity.type === 'call' ? 'text-green-600' :
-                                                            activity.type === 'email' ? 'text-blue-600' :
-                                                            activity.type === 'meeting' ? 'text-purple-600' :
-                                                            'text-gray-600'
+                                                                activity.type === 'email' ? 'text-blue-600' :
+                                                                    activity.type === 'meeting' ? 'text-purple-600' :
+                                                                        'text-gray-600'
                                                         } />
                                                     </div>
                                                     <div className="flex-1">

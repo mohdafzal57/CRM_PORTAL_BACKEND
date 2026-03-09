@@ -3,7 +3,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 import CRMLayout from '../../components/crm/CRMLayout';
 import {
     Plus, Search, Edit2, Trash2, X, ChevronLeft, ChevronRight,
@@ -11,7 +11,7 @@ import {
     CheckCircle, XCircle, Phone
 } from 'lucide-react';
 
-const API_BASE = import.meta.env.VITE_API_URL || '';
+// Redundant API_BASE removed
 
 const Meetings = () => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -44,9 +44,7 @@ const Meetings = () => {
     const fetchMeetings = useCallback(async () => {
         try {
             setLoading(true);
-            const token = localStorage.getItem('token');
-            const { data } = await axios.get(`${API_BASE}/api/crm/meetings`, {
-                headers: { Authorization: `Bearer ${token}` },
+            const { data } = await api.get('/crm/meetings', {
                 params: {
                     search: searchQuery,
                     status: statusFilter,
@@ -54,7 +52,7 @@ const Meetings = () => {
                     limit: 10
                 }
             });
-            
+
             if (data.success) {
                 setMeetings(data.data.meetings);
                 setPagination(prev => ({
@@ -77,7 +75,7 @@ const Meetings = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitLoading(true);
-        
+
         try {
             const token = localStorage.getItem('token');
             const submitData = {
@@ -87,15 +85,11 @@ const Meetings = () => {
             };
 
             if (editingMeeting) {
-                await axios.put(`${API_BASE}/api/crm/meetings/${editingMeeting._id}`, submitData, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                await api.put(`/crm/meetings/${editingMeeting._id}`, submitData);
             } else {
-                await axios.post(`${API_BASE}/api/crm/meetings`, submitData, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                await api.post('/crm/meetings', submitData);
             }
-            
+
             setModalOpen(false);
             setEditingMeeting(null);
             resetForm();
@@ -112,7 +106,7 @@ const Meetings = () => {
         setEditingMeeting(meeting);
         const startDate = new Date(meeting.startDate);
         const endDate = new Date(meeting.endDate);
-        
+
         setFormData({
             title: meeting.title || '',
             description: meeting.description || '',
@@ -131,12 +125,9 @@ const Meetings = () => {
 
     const handleDelete = async (id) => {
         if (!window.confirm('Are you sure you want to delete this meeting?')) return;
-        
+
         try {
-            const token = localStorage.getItem('token');
-            await axios.delete(`${API_BASE}/api/crm/meetings/${id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await api.delete(`/crm/meetings/${id}`);
             fetchMeetings();
         } catch (error) {
             console.error('Error deleting meeting:', error);
@@ -146,11 +137,7 @@ const Meetings = () => {
 
     const handleStatusChange = async (id, newStatus) => {
         try {
-            const token = localStorage.getItem('token');
-            await axios.patch(`${API_BASE}/api/crm/meetings/${id}/status`, 
-                { status: newStatus },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
+            await api.patch(`/crm/meetings/${id}/status`, { status: newStatus });
             fetchMeetings();
         } catch (error) {
             console.error('Error updating status:', error);
@@ -273,11 +260,10 @@ const Meetings = () => {
                             <div key={meeting._id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow">
                                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                                     <div className="flex items-start gap-4">
-                                        <div className={`p-3 rounded-xl ${
-                                            meeting.meetingType === 'online' ? 'bg-blue-100' :
-                                            meeting.meetingType === 'in_person' ? 'bg-green-100' :
-                                            'bg-purple-100'
-                                        }`}>
+                                        <div className={`p-3 rounded-xl ${meeting.meetingType === 'online' ? 'bg-blue-100' :
+                                                meeting.meetingType === 'in_person' ? 'bg-green-100' :
+                                                    'bg-purple-100'
+                                            }`}>
                                             {typeIcons[meeting.meetingType] || <Calendar size={20} />}
                                         </div>
                                         <div className="flex-1">
@@ -303,12 +289,12 @@ const Meetings = () => {
                                             )}
                                         </div>
                                     </div>
-                                    
+
                                     <div className="flex items-center gap-3">
                                         <span className={`px-3 py-1 text-xs font-medium rounded-full capitalize ${statusColors[meeting.status]}`}>
                                             {meeting.status?.replace('_', ' ')}
                                         </span>
-                                        
+
                                         <div className="flex items-center gap-1">
                                             {meeting.status === 'scheduled' && canWrite && (
                                                 <>
@@ -341,12 +327,12 @@ const Meetings = () => {
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 {meeting.meetingLink && (
                                     <div className="mt-4 pt-4 border-t border-gray-100">
-                                        <a 
-                                            href={meeting.meetingLink} 
-                                            target="_blank" 
+                                        <a
+                                            href={meeting.meetingLink}
+                                            target="_blank"
                                             rel="noopener noreferrer"
                                             className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 text-sm"
                                         >

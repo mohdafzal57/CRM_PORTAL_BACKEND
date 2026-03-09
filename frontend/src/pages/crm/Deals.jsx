@@ -3,7 +3,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 import CRMLayout from '../../components/crm/CRMLayout';
 import {
     Plus,
@@ -21,7 +21,7 @@ import {
     TrendingUp
 } from 'lucide-react';
 
-const API_BASE = import.meta.env.VITE_API_URL || '';
+// Redundant API_BASE removed
 
 const Deals = () => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -55,9 +55,7 @@ const Deals = () => {
     const fetchDeals = useCallback(async () => {
         try {
             setLoading(true);
-            const token = localStorage.getItem('token');
-            const { data } = await axios.get(`${API_BASE}/api/crm/deals`, {
-                headers: { Authorization: `Bearer ${token}` },
+            const { data } = await api.get('/crm/deals', {
                 params: {
                     search: debouncedSearch,
                     stage: stageFilter,
@@ -65,7 +63,7 @@ const Deals = () => {
                     limit: 12
                 }
             });
-            
+
             if (data.success) {
                 setDeals(data.data.deals);
                 setPagination(prev => ({
@@ -88,7 +86,7 @@ const Deals = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitLoading(true);
-        
+
         try {
             const token = localStorage.getItem('token');
             const submitData = {
@@ -98,15 +96,11 @@ const Deals = () => {
             };
 
             if (editingDeal) {
-                await axios.put(`${API_BASE}/api/crm/deals/${editingDeal._id}`, submitData, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                await api.put(`/crm/deals/${editingDeal._id}`, submitData);
             } else {
-                await axios.post(`${API_BASE}/api/crm/deals`, submitData, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                await api.post('/crm/deals', submitData);
             }
-            
+
             setModalOpen(false);
             setEditingDeal(null);
             resetForm();
@@ -126,7 +120,7 @@ const Deals = () => {
             value: deal.value?.toString() || '',
             stage: deal.stage || 'prospecting',
             probability: deal.probability || 10,
-            expectedCloseDate: deal.expectedCloseDate ? 
+            expectedCloseDate: deal.expectedCloseDate ?
                 new Date(deal.expectedCloseDate).toISOString().split('T')[0] : '',
             notes: deal.notes || ''
         });
@@ -135,12 +129,9 @@ const Deals = () => {
 
     const handleDelete = async (id) => {
         if (!window.confirm('Are you sure you want to delete this deal?')) return;
-        
+
         try {
-            const token = localStorage.getItem('token');
-            await axios.delete(`${API_BASE}/api/crm/deals/${id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await api.delete(`/crm/deals/${id}`);
             fetchDeals();
         } catch (error) {
             console.error('Error deleting deal:', error);
@@ -327,7 +318,7 @@ const Deals = () => {
                                         <span className="text-sm text-gray-500">Probability</span>
                                         <div className="flex items-center gap-2">
                                             <div className="w-20 h-2 bg-gray-200 rounded-full overflow-hidden">
-                                                <div 
+                                                <div
                                                     className="h-full bg-blue-500 rounded-full transition-all"
                                                     style={{ width: `${deal.probability || 0}%` }}
                                                 />
@@ -354,8 +345,8 @@ const Deals = () => {
                                         <div className="flex items-center gap-2">
                                             <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
                                                 <span className="text-xs font-medium text-blue-600">
-                                                    {deal.owner?.fullName?.charAt(0)?.toUpperCase() || 
-                                                     deal.owner?.name?.charAt(0)?.toUpperCase() || '?'}
+                                                    {deal.owner?.fullName?.charAt(0)?.toUpperCase() ||
+                                                        deal.owner?.name?.charAt(0)?.toUpperCase() || '?'}
                                                 </span>
                                             </div>
                                             <span className="text-sm text-gray-500">
